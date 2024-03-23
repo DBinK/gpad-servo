@@ -1,4 +1,5 @@
 import servo
 
-result = servo.angle_to_high_time(10)
-print(result)
+print(servo.angle_to_high_time(9))
+
+print(servo.rt(3, 90))
