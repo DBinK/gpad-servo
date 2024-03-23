@@ -1,5 +1,4 @@
 import pygame
-from time import sleep
 
 
 def init_joysticks():
