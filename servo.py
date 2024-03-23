@@ -34,10 +34,19 @@ def gpad_to_angle(gpad_input, min_angle, max_angle):
 
 # gpio pwmt [wpipin] [high_time] [period_time] 
 # gpio pwmt 3 2500 20000 
-# 旋转指令
 def rt(wpipin, angle):
+    """
+    实现旋转指令的功能。
+    
+    参数:
+    - wpipin: 用于旋转的GPIO引脚编号，整数类型。
+    - angle: 旋转的角度，整数或浮点数类型。
+    """
+    # 将输入的wpipin和计算出的high_time转换为字符串类型，以备后续命令行调用
     wpipin = str(wpipin)
     high_time = str(angle_to_high_time(angle))
+    
+    # 打印并执行旋转指令
     print(f"gpio pwmt {wpipin} {high_time} 20000")
     subprocess.call(['gpio', 'pwmt', wpipin, high_time, '20000'])
 

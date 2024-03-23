@@ -1,44 +1,48 @@
-import gpad
-import servo
-
+# 使用Pygame和GPAD模块控制伺服电机，实现游戏手柄对伺服角度的平滑控制
 import pygame
 from time import sleep
 
+# 导入自定义的GPAD、伺服电机控制和平滑滤波器模块
+import gpad
+import servo
 from smooth import SmoothFilter
 
-Smooth = 1
+Smooth = 3  # 设定平滑滤波器的窗口大小
 
-top_angle_filter = SmoothFilter(window_size=Smooth)  # 创建平滑滤波器对象
-button_angle_filter = SmoothFilter(window_size=Smooth)  # 创建平滑滤波器对象
+# 初始化两个平滑滤波器，用于处理顶部和按钮的旋转角度输入
+top_angle_filter = SmoothFilter(window_size=Smooth)
+button_angle_filter = SmoothFilter(window_size=Smooth)
 
+# 初始化游戏手柄
 joysticks = gpad.init_joysticks()
 
+# 运行循环，处理游戏手柄输入并控制伺服电机
 running = True
 while running:
-    sleep(0.1)  # 采样间隔控制(单位:秒)
+    sleep(0.1)  # 控制输入采样间隔，单位为秒，经测试需要不小于0.1秒
 
+    # 处理Pygame事件，如退出事件
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
+    # 遍历连接的游戏手柄，处理输入
     for joystick in joysticks:
+        # 获取按钮、方向帽和轴输入
         button_input = gpad.get_button_input(joystick)
         hat_input = gpad.get_hat_input(joystick)
         axis_input = gpad.get_axis_input(joystick)
-        """
-        print("Button input:", button_input)
-        print("Hat input:", hat_input)
-        """
-        print("Axis input:", axis_input)
-
-        top_angle = servo.gpad_to_angle(axis_input[4], -45, 45)
-        top_angle_filter.update(top_angle)  # 更新平滑滤波器
-        smoothed_top_angle = top_angle_filter.get_smooth_value()  # 获取平滑后的值
+        
+        # 将轴输入映射并转换为伺服角度，使用平滑滤波器处理后控制伺服电机
+        top_angle = servo.gpad_to_angle(axis_input[4], -30, 30)
+        top_angle_filter.update(top_angle)
+        smoothed_top_angle = top_angle_filter.get_smooth_value()
         servo.rt(3, smoothed_top_angle)
 
-        button_angle = servo.gpad_to_angle(axis_input[0], -45, 45)
-        button_angle_filter.update(-button_angle)  # 更新平滑滤波器
-        smoothed_button_angle = button_angle_filter.get_smooth_value()  # 获取平滑后的值
+        button_angle = servo.gpad_to_angle(axis_input[0], -90, 90)
+        button_angle_filter.update(-button_angle)  # 注意：此处对按钮角度使用相反值
+        smoothed_button_angle = button_angle_filter.get_smooth_value()
         servo.rt(4, smoothed_button_angle)
 
+# 游戏结束或退出时，关闭所有游戏手柄连接
 gpad.close_joysticks(joysticks)
