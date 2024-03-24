@@ -1,5 +1,18 @@
 import pygame
 
+button_mapping = {
+    "A": 0,
+    "B": 1,
+    "X": 2,
+    "Y": 3,
+    "L": 4,
+    "R": 5,
+    "BACK": 6,
+    "START": 7,
+    "HOME": 8,
+    "LCLICK": 9,
+    "RCLICK": 10
+}
 def init_joysticks():
     """
     初始化所有连接的摇杆控制器。
@@ -20,10 +33,11 @@ def get_button_input(joystick):
     获取指定摇杆的按钮输入状态。
     
     参数:
-    - joystick: pygame.joystick.Joystick对象，指定的摇杆。
+    - joystick: pygame.joystick.Joystick对象, 指定的摇杆。
     
     返回:
-    - 按钮输入状态列表，列表中每个元素代表对应按钮的状态（0为未按下，非0为按下）。
+    - 按钮输入状态列表, 列表中每个元素代表对应按钮的状态 (0为未按下, 非0为按下 )。
+    - 对应按钮顺序可能是 [A, B, X, Y, L, R, BACK, START, HOME, LCLICK, RCLICK]
     """
     return [joystick.get_button(i) for i in range(joystick.get_numbuttons())]
 
@@ -32,10 +46,10 @@ def get_hat_input(joystick):
     获取指定摇杆的帽形开关输入状态。
     
     参数:
-    - joystick: pygame.joystick.Joystick对象，指定的摇杆。
+    - joystick: pygame.joystick.Joystick对象, 指定的摇杆。
     
     返回:
-    - 帽形开关输入状态列表，每个帽形开关以元组形式表示其方向（如(-1, -1)表示左下角）。
+    - 帽形开关输入状态列表, 每个帽形开关以元组形式表示其方向 (如(-1, -1)表示左下角 )。
     """
     return [joystick.get_hat(i) for i in range(joystick.get_numhats())]
 
@@ -44,10 +58,11 @@ def get_axis_input(joystick):
     获取指定摇杆的轴输入状态。
     
     参数:
-    - joystick: pygame.joystick.Joystick对象，指定的摇杆。
+    - joystick: pygame.joystick.Joystick对象, 指定的摇杆。
     
     返回:
-    - 轴输入状态列表，列表中每个元素代表对应轴的当前位置（范围通常在-1到1之间）。
+    - 轴输入状态列表, 列表中每个元素代表对应轴的当前位置 (范围通常在-1到1之间 )。
+    - 对应按轴顺序可能是 [LX, LY, ZL, RX, RY, ZR]
     """
     return [joystick.get_axis(i) for i in range(joystick.get_numaxes())]
 

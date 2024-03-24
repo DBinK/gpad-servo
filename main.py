@@ -7,7 +7,9 @@ import gpad
 import servo
 from smooth import SmoothFilter
 
-Smooth = 3  # 设定平滑滤波器的窗口大小
+Smooth = 3      # 设定平滑滤波器的窗口大小
+sampling = 0.1  # 控制输入采样间隔，单位为秒，经测试需要不小于0.1秒
+mode = 'gpad'        # 1为手柄控制模式，2为自瞄模式
 
 # 初始化两个平滑滤波器，用于处理顶部和按钮的旋转角度输入
 top_angle_filter = SmoothFilter(window_size=Smooth)
@@ -19,7 +21,8 @@ joysticks = gpad.init_joysticks()
 # 运行循环，处理游戏手柄输入并控制伺服电机
 running = True
 while running:
-    sleep(0.1)  # 控制输入采样间隔，单位为秒，经测试需要不小于0.1秒
+
+    sleep(sampling)  
 
     # 处理Pygame事件，如退出事件
     for event in pygame.event.get():
@@ -32,6 +35,9 @@ while running:
         button_input = gpad.get_button_input(joystick)
         hat_input = gpad.get_hat_input(joystick)
         axis_input = gpad.get_axis_input(joystick)
+        print(f"摇杆输入: {axis_input}")
+        print(f"帽键输入: {hat_input}")
+        print(f"按钮输入: {button_input}")
         
         # 将轴输入映射并转换为伺服角度，使用平滑滤波器处理后控制伺服电机
         top_angle = servo.gpad_to_angle(axis_input[4], -30, 30)
