@@ -64,9 +64,11 @@ while running:
         if mode == 1:
             mode = 2
             print("切换自瞄模式")
+            sleep(1) # 延时1秒，避免重复切换
         else:
             mode = 1
             print("切换手柄模式")
+            sleep(1) # 延时1秒，避免重复切换
 
 # 游戏结束或退出时，关闭所有游戏手柄连接
 gpad.close_joysticks(joysticks)
