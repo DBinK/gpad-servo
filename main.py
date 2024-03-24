@@ -9,7 +9,7 @@ from smooth import SmoothFilter
 
 Smooth = 3      # 设定平滑滤波器的窗口大小
 sampling = 0.1  # 控制输入采样间隔，单位为秒，经测试需要不小于0.1秒
-mode = 1        # 1为手柄模式，2为自瞄模式
+mode = 1        # 1为手柄完全跟随模式, 2为手柄步进控制模式, 3为自瞄模式
 
 # 初始化两个平滑滤波器，用于处理顶部和按钮的旋转角度输入
 top_angle_filter = SmoothFilter(window_size=Smooth)
@@ -56,6 +56,12 @@ while running:
         button_angle_filter.update(-button_angle)  # 注意: 此处对button_angle取正负可控制正反方向
         smoothed_button_angle = button_angle_filter.get_smooth_value()
         servo.rt(4, smoothed_button_angle)
+
+    if axis_input[0] is not None and mode == 2:
+        button_speed = servo.gpad_to_angle(axis_input[0], -90, 90)
+        button_angle = button_speed + button_angle
+        servo.rt(3, button_angle)
+
 
     if button_input[3]:
         if mode == 1:

@@ -50,3 +50,4 @@ def rt(wpipin, angle):
     print(f"gpio pwmt {wpipin} {high_time} 20000")
     subprocess.call(['gpio', 'pwmt', wpipin, high_time, '20000'])
 
+
