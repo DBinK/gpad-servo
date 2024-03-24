@@ -38,17 +38,27 @@ while running:
         print(f"摇杆输入: {axis_input}")
         print(f"帽键输入: {hat_input}")
         print(f"按钮输入: {button_input}")
-        
+
+    # 键值表
+    # [A, B, X, Y, L, R, BACK, START, HOME, LCLICK, RCLICK]
+    # [0, 1, 2, 3, 4, 5,    6,     7,    8,      9,     10]    
+
+    if axis_input[4] != 0:
         # 将轴输入映射并转换为伺服角度，使用平滑滤波器处理后控制伺服电机
         top_angle = servo.gpad_to_angle(axis_input[4], -30, 30)
         top_angle_filter.update(top_angle)
         smoothed_top_angle = top_angle_filter.get_smooth_value()
         servo.rt(3, smoothed_top_angle)
 
+    if axis_input[0] != 0:
         button_angle = servo.gpad_to_angle(axis_input[0], -90, 90)
         button_angle_filter.update(-button_angle)  # 注意：此处对按钮角度使用相反值
         smoothed_button_angle = button_angle_filter.get_smooth_value()
         servo.rt(4, smoothed_button_angle)
+
+    if button_input[10] == 1:
+        running = False
+        print("退出程序")
 
 # 游戏结束或退出时，关闭所有游戏手柄连接
 gpad.close_joysticks(joysticks)
