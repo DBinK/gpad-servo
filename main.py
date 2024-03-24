@@ -44,6 +44,8 @@ while running:
     # [A, B, X, Y, L, R, BACK, START, HOME, LCLICK, RCLICK]
     # [0, 1, 2, 3, 4, 5,    6,     7,    8,      9,     10]    
 
+
+    # 完全跟踪模式
     if axis_input[4] is not None and mode == 1:
         # 将轴输入映射并转换为伺服角度，使用平滑滤波器处理后控制伺服电机
         top_angle = servo.gpad_to_angle(axis_input[4], -45, 45)
@@ -55,14 +57,17 @@ while running:
         button_angle = servo.gpad_to_angle(axis_input[0], -90, 90)
         button_angle_filter.update(-button_angle)  # 注意: 此处对button_angle取正负可控制正反方向
         smoothed_button_angle = button_angle_filter.get_smooth_value()
+        print(f"当前角度: {smoothed_button_angle}")
         servo.rt(4, smoothed_button_angle)
 
+    # 步进控制模式
     if axis_input[0] is not None and mode == 2:
         button_speed = servo.gpad_to_angle(axis_input[0], -90, 90)
-        if button_angle in range(-90, 90): 
-            button_angle = button_speed + button_angle
-        print(f"按钮速度: {button_angle}")
-        servo.rt(3, button_angle)
+        if button_angle <= 90 or button_angle >= -90: 
+            button_angle =  button_angle + button_speed
+        print(f"按钮速度: {button_speed}")
+        print(f"当前角度: {button_angle}")
+        servo.rt(4, button_angle)
 
 
     if button_input[3]:
