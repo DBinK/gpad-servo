@@ -22,7 +22,8 @@ joysticks = gpad.init_joysticks()
 running = True
 while running:
 
-    sleep(sampling)  
+    sleep(sampling)  # 采样间隔
+    print(f"\n当前模式: {mode}\n")
 
     # 处理Pygame事件，如退出事件
     for event in pygame.event.get():
@@ -37,7 +38,7 @@ while running:
         axis_input = gpad.get_axis_input(joystick)
         print(f"摇杆输入: {axis_input}")
         print(f"帽键输入: {hat_input}")
-        print(f"按钮输入: {button_input}")
+        print(f"按钮输入: {button_input}\n")
 
     # 键值表
     # [A, B, X, Y, L, R, BACK, START, HOME, LCLICK, RCLICK]
@@ -56,19 +57,20 @@ while running:
         smoothed_button_angle = button_angle_filter.get_smooth_value()
         servo.rt(4, smoothed_button_angle)
 
+    if button_input[3]:
+        if mode == 1:
+            mode = 2
+            print("\n切换自瞄模式")
+            sleep(0.5) # 消抖，避免重复切换
+        else:
+            mode = 1
+            print("\n切换手柄模式")
+            sleep(0.5) # 消抖，避免重复切换
+
     if button_input[6]:
         running = False
         print("退出程序")
 
-    if button_input[3]:
-        if mode == 1:
-            mode = 2
-            print("切换自瞄模式")
-            sleep(1) # 延时1秒，避免重复切换
-        else:
-            mode = 1
-            print("切换手柄模式")
-            sleep(1) # 延时1秒，避免重复切换
 
 # 游戏结束或退出时，关闭所有游戏手柄连接
 gpad.close_joysticks(joysticks)
