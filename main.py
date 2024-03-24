@@ -59,7 +59,9 @@ while running:
 
     if axis_input[0] is not None and mode == 2:
         button_speed = servo.gpad_to_angle(axis_input[0], -90, 90)
-        button_angle = button_speed + button_angle
+        if button_angle in range(-90, 90): 
+            button_angle = button_speed + button_angle
+        print(f"按钮速度: {button_angle}")
         servo.rt(3, button_angle)
 
 
