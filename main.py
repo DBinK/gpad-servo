@@ -1,5 +1,4 @@
 # 使用Pygame和GPAD模块控制伺服电机，实现游戏手柄对伺服角度的平滑控制
-from turtle import speed
 import pygame
 from time import sleep
 
