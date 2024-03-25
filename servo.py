@@ -1,3 +1,5 @@
+# servo.py 舵机驱动模块
+
 import subprocess
 
 def angle_to_high_time(angle):
