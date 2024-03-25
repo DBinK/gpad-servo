@@ -13,8 +13,8 @@ mode = 1  # 1为手柄完全跟随模式, 2为手柄步进控制模式, 3为自�
 
 top_angle    = 0   # 初始化顶部角度
 button_angle = 0   # 初始化底部角度
-sp           = 1   # 步进速度系数
-trubo        = 0.1 # 加速系数
+sp           = 1   # 摇杆步进速度系数
+trubo        = 0.3 # 帽键步进加速系数
 
 # 初始化两个平滑滤波器，用于处理顶部和按钮的旋转角度输入
 top_angle_filter = SmoothFilter(window_size=Smooth)
