@@ -1,40 +1,33 @@
-import cv2
-from flask import Flask, Response
+import cv2 
+import numpy as np
 
-app = Flask(__name__)
+# 读取图像
+image = cv2.imread('a.jpg')
 
-# 读取MJPEG流
-cap = cv2.VideoCapture('http://192.168.50.40:4747/video?1920x1080')
+# 将图像转换为灰度图像
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-def generate_frames():
-    while True:
-        ret, frame = cap.read()
+# 应用二值阈值处理
+ret, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY)
 
-        # 在画面中间绘制一个十字准星
-        height, width, _ = frame.shape
-        center_x = width // 2
-        center_y = height // 2  
-        line_length = 100 # 十字准星的长度
-        cv2.line(frame, (center_x - line_length, center_y), (center_x + line_length, center_y), (0, 255, 0), 2)
-        cv2.line(frame, (center_x, center_y - line_length), (center_x, center_y + line_length), (0, 255, 0), 2)
+# 使用findContours()函数检测轮廓
+contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # 将帧转换为JPEG格式
-        ret, buffer = cv2.imencode('.jpg', frame)
-        frame = buffer.tobytes()
+# 绘制轮廓
+cv2.drawContours(image, contours, -1, (0, 0, 255), 2)
 
-        # 生成带有十字准星的画面
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+# 在方框的四个角位置绘制蓝色圆圈
+for contour in contours:
+    x, y, w, h = cv2.boundingRect(contour)
+    cv2.circle(image, (x, y), 5, (255, 0, 0), -1)
+    cv2.circle(image, (x + w, y), 5, (255, 0, 0), -1)
+    cv2.circle(image, (x, y + h), 5, (255, 0, 0), -1)
+    cv2.circle(image, (x + w, y + h), 5, (255, 0, 0), -1)
 
-@app.route('/')
-def index():
-    return Response(generate_frames(),
-                mimetype='multipart/x-mixed-replace; boundary=frame')
+# 显示结果图像
+cv2.namedWindow("Result", cv2.WINDOW_NORMAL)
 
-@app.route('/video_feed')
-def video_feed():
-    return Response(generate_frames(),
-                    mimetype='multipart/x-mixed-replace; boundary=frame')
-
-if __name__ == '__main__':
-    app.run()
+cv2.resizeWindow("Result", 1280, 720)
+cv2.imshow('Result', image)
+cv2.waitKey(0)
+cv2.destroyAllWindows()

@@ -11,10 +11,10 @@ Smooth = 3  # 设定平滑滤波器的窗口大小
 sampling = 0.1  # 控制输入采样间隔，单位为秒，经测试需要不小于0.1秒
 mode = 1  # 1为手柄完全跟随模式, 2为手柄步进控制模式, 3为自瞄模式
 
-top_angle    = 0   # 初始化顶部角度
-button_angle = 0   # 初始化底部角度
-sp           = 1   # 摇杆步进速度系数
-trubo        = 0.3 # 帽键步进加速系数
+top_angle    = 0    # 初始化顶部角度
+button_angle = 0    # 初始化底部角度
+sp           = 0.05 # 摇杆步进速度系数
+trubo        = 0.1  # 帽键步进加速系数
 
 # 初始化两个平滑滤波器，用于处理顶部和按钮的旋转角度输入
 top_angle_filter = SmoothFilter(window_size=Smooth)
@@ -67,9 +67,9 @@ while running:
         servo.rt(4, smoothed_button_angle) 
     
     # 步进控制模式 - 摇杆
-    if axis_input[4] is not None and mode == 2:
+    if axis_input[1] is not None and mode == 2:
         
-        top_speed = servo.gpad_to_angle(axis_input[4], -90, 90)
+        top_speed = servo.gpad_to_angle(axis_input[1], -90, 90)
         top_angle =  top_angle + top_speed*sp
         
         # 限制button_angle在(-90, 90)范围内
@@ -105,20 +105,38 @@ while running:
     # 步进控制模式 - 帽键
     if hat_input[0][0] is not None and mode == 2:
         
-        button_speed = servo.gpad_to_angle(hat_input[0][0], -90, 90)
+        button_speed = servo.gpad_to_angle(hat_input[0][0], -45, 45)
         button_angle =  button_angle + button_speed*trubo
 
-        if button_angle < -90:  # 限制button_angle在(-90, 90)范围内
-            button_angle = -90
-        elif button_angle > 90:
-            button_angle = 90
+        if button_angle < -45:  # 限制button_angle在(-90, 90)范围内
+            button_angle = -45
+        elif button_angle > 45:
+            button_angle = 45
 
         button_angle_filter.update(-button_angle)  # 注意: 此处对button_angle取正负翻转控制方向
         smoothed_button_angle = button_angle_filter.get_smooth_value()
 
         print(f"按钮速度: {button_speed}")
-        print(f"当前角度: {smoothed_button_angle}")
+        print(f"底部角度: {smoothed_button_angle}")
         servo.rt(4, smoothed_button_angle)
+    
+    if hat_input[0][1] is not None and mode == 2:
+        
+        top_speed = servo.gpad_to_angle(hat_input[0][1], -45, 45)
+        top_angle =  top_angle + top_speed*trubo
+        
+        # 限制button_angle在(-90, 90)范围内
+        if top_angle < -45:  
+            top_angle = -45
+        elif top_angle > 45:
+            top_angle = 45
+            
+        top_angle_filter.update(top_angle)  # 注意: 此处对top_angle取正负可控制正反方向
+        smoothed_top_angle = top_angle_filter.get_smooth_value()
+        print(f"按钮速度: {top_speed}")
+        print(f"顶部角度: {smoothed_top_angle}")
+        servo.rt(3, smoothed_top_angle)
+
 
     if button_input[0]:
         trubo = 1
