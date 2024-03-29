@@ -54,7 +54,7 @@ while running:
     if axis_input[4] is not None and mode == 1:
         # 将轴输入映射并转换为伺服角度，使用平滑滤波器处理后控制伺服电机
         top_angle = servo.gpad_to_angle(axis_input[4], -45, 45)
-        top_angle_filter.update(top_angle)  # 注意: 此处对top_angle取正负可控制正反方向
+        top_angle_filter.update(-top_angle)  # 注意: 此处对top_angle取正负可控制正反方向
         smoothed_top_angle = top_angle_filter.get_smooth_value()
         print(f"当前角度: {smoothed_top_angle}")
         servo.rt(3, smoothed_top_angle)
@@ -131,7 +131,7 @@ while running:
         elif top_angle > 45:
             top_angle = 45
             
-        top_angle_filter.update(top_angle)  # 注意: 此处对top_angle取正负可控制正反方向
+        top_angle_filter.update(-top_angle)  # 注意: 此处对top_angle取正负可控制正反方向
         smoothed_top_angle = top_angle_filter.get_smooth_value()
         print(f"按钮速度: {top_speed}")
         print(f"顶部角度: {smoothed_top_angle}")
