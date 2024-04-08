@@ -1,126 +1,39 @@
-import cv2
-import numpy as np
+from PIL import Image, ImageDraw
 
-def calculate_intersection(segment1, segment2):
-    x1, y1 = segment1[0]
-    x2, y2 = segment1[1]
-    x3, y3 = segment2[0]
-    x4, y4 = segment2[1]
+def shrink_rectangle(x1, y1, x2, y2, x3, y3, x4, y4, center_x, center_y):
+    """
+    已知四边形四个顶点坐标和中心点坐标,计算缩小 0.5 倍后的四边形坐标
+    """
+    # 计算缩小后的四个顶点坐标
+    new_x1 = center_x + (x1 - center_x) * 0.5
+    new_y1 = center_y + (y1 - center_y) * 0.5
+    new_x2 = center_x + (x2 - center_x) * 0.5
+    new_y2 = center_y + (y2 - center_y) * 0.5
+    new_x3 = center_x + (x3 - center_x) * 0.5
+    new_y3 = center_y + (y3 - center_y) * 0.5
+    new_x4 = center_x + (x4 - center_x) * 0.5
+    new_y4 = center_y + (y4 - center_y) * 0.5
 
-    dx1 = x2 - x1
-    dx2 = x4 - x3
-    dy1 = y2 - y1
-    dy2 = y4 - y3
-
-    det = dx1 * dy2 - dx2 * dy1
-
-    if det == 0:
-        # 线段平行或共线
-        return None
-    else:
-        dx3 = x1 - x3
-        dy3 = y1 - y3
-
-        det1 = dx1 * dy3 - dx3 * dy1
-        det2 = dx2 * dy3 - dx3 * dy2
-
-        if det1 == 0 and det2 == 0:
-            # 线段共线
-            return None
-        elif det1 == 0 or det2 == 0:
-            # 线段平行
-            return None
-        else:
-            s = det1 / det
-            t = det2 / det
-
-            if 0 <= s <= 1 and 0 <= t <= 1:
-                # 计算交点坐标
-                intersection_x = x1 + (dx1 * t)
-                intersection_y = y1 + (dy1 * t)
-                return (intersection_x, intersection_y)
-            else:
-                # 线段相交但交点不在线段上
-                return None
+    return new_x1, new_y1, new_x2, new_y2, new_x3, new_y3, new_x4, new_y4
 
 # 示例使用
-segment1 = ((1, 1), (4, 4))
-segment2 = ((1, 4), (4, 1))
-intersection = calculate_intersection(segment1, segment2)
-print(intersection)
+x1, y1 = 0, 0
+x2, y2 = 1, 4
+x3, y3 = 3, 4
+x4, y4 = 2, 0
+center_x, center_y = 2, 2
 
-# 读取图像
-img = cv2.imread('img/w2.jpg')
+new_x1, new_y1, new_x2, new_y2, new_x3, new_y3, new_x4, new_y4 = shrink_rectangle(x1, y1, x2, y2, x3, y3, x4, y4, center_x, center_y)
 
-# 转换为灰度图像
-gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+# 创建一个 400x400 像素的图像
+img = Image.new("RGB", (400, 400), (255, 255, 255))
+draw = ImageDraw.Draw(img)
 
-# 高斯滤波去噪
-blur = cv2.GaussianBlur(gray, (5, 5), 0)
+# 绘制原始四边形
+draw.polygon([(x1 * 100, y1 * 100), (x2 * 100, y2 * 100), (x3 * 100, y3 * 100), (x4 * 100, y4 * 100)], outline=(0, 0, 0))
 
-# 使用Canny算子进行边缘检测
-edges = cv2.Canny(blur, 100, 200)
+# 绘制缩小后的四边形
+draw.polygon([(new_x1 * 100, new_y1 * 100), (new_x2 * 100, new_y2 * 100), (new_x3 * 100, new_y3 * 100), (new_x4 * 100, new_y4 * 100)], outline=(255, 0, 0))
 
-# 查找轮廓
-contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-# 初始化最大周长和对应的轮廓
-max_perimeter = 0
-max_cnt = None
-
-# 遍历轮廓
-for cnt in contours:
-    # 计算轮廓的面积和周长
-    area = cv2.contourArea(cnt)
-    perimeter = cv2.arcLength(cnt, True)
-
-    # 设置阈值,过滤掉小轮廓
-    if area > 1000 and perimeter > 200:
-        # 如果当前轮廓的周长大于最大周长
-        if perimeter > max_perimeter:
-            max_perimeter = perimeter
-            max_cnt = cnt
-
-# 如果找到周长最大的轮廓
-if max_cnt is not None:
-    # 近似多边形
-    approx = cv2.approxPolyDP(max_cnt, 0.02 * max_perimeter, True)
-
-    # 如果是四边形,则绘制边框
-    if len(approx) == 4:
-        x, y, w, h = cv2.boundingRect(approx)
-        # 绘制四边形的边框
-        cv2.drawContours(img, [approx], 0, (255, 0, 0), 2)
-
-        # 计算四边形的四个顶点坐标
-        vertices = approx.reshape(4, 2)
-        print(vertices)
-
-        # 计算两个对角线的交点
-        segment1 = (tuple(vertices[0]), tuple(vertices[2]))
-        segment2 = (tuple(vertices[1]), tuple(vertices[3]))
-
-        intersection = calculate_intersection(segment1, segment2)
-
-        # 绘制交点和坐标
-        if intersection is not None:
-            cv2.circle(img, (int(intersection[0]), int(intersection[1])), 5, (255, 0, 0), -1)
-            cv2.putText(img, f'({int(intersection[0])}, {int(intersection[1])})', (int(intersection[0])+5, int(intersection[1])-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
-
-        # 绘制每个顶点的坐标
-        for i, vertex in enumerate(vertices):
-            cv2.putText(img, f'({vertex[0]}, {vertex[1]})', (vertex[0]+5, vertex[1]-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
-
-        # 绘制对角线
-        cv2.line(img, (vertices[0][0], vertices[0][1]), (vertices[2][0], vertices[2][1]), (0, 255, 0), 1)
-        cv2.line(img, (vertices[1][0], vertices[1][1]), (vertices[3][0], vertices[3][1]), (0, 255, 0), 1)
-
-        # 输出交点的坐标
-        if intersection is not None:
-            print(f'Intersection coordinates: ({intersection[0]}, {intersection[1]})')
-
-# 显示的图像
-cv2.imshow('final', img)
-cv2.imwrite('out/x-out.jpg', img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+# 保存图像
+img.save("output.png")
