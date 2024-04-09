@@ -121,7 +121,7 @@ def draw_contour_and_vertices(img, vertices):
             f"({vertex[0]}, {vertex[1]})",
             (vertex[0] + 5, vertex[1] - 5),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,(0, 0, 255),1,cv2.LINE_AA,
+            0.5, (0, 0, 255), 1, cv2.LINE_AA,
         )
 
     # 绘制对角线
@@ -129,15 +129,13 @@ def draw_contour_and_vertices(img, vertices):
         img,
         (vertices[0][0], vertices[0][1]),
         (vertices[2][0], vertices[2][1]),
-        (0, 255, 0),
-        1,
+        (0, 255, 0), 1,
     )
     cv2.line(
         img,
         (vertices[1][0], vertices[1][1]),
         (vertices[3][0], vertices[3][1]),
-        (0, 255, 0),
-        1,
+        (0, 255, 0), 1,
     )
 
     intersection = calculate_intersection(vertices)  # 计算两个对角线的交点
@@ -152,7 +150,7 @@ def draw_contour_and_vertices(img, vertices):
             f"({int(intersection[0])}, {int(intersection[1])})",
             (int(intersection[0]) + 5, int(intersection[1]) - 5),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,(0, 0, 255),1,cv2.LINE_AA,
+            0.5, (0, 0, 255), 1, cv2.LINE_AA,
         )
     # 输出交点的坐标
     if intersection is not None:
