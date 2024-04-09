@@ -6,42 +6,33 @@ def calculate_intersection(vertices):
     x3, y3 = vertices[1]
     x4, y4 = vertices[3]
 
-    dx1 = x2 - x1
-    dx2 = x4 - x3
-    dy1 = y2 - y1
-    dy2 = y4 - y3
-
+    dx1, dy1 = x2 - x1, y2 - y1
+    dx2, dy2 = x4 - x3, y4 - y3
+    
     det = dx1 * dy2 - dx2 * dy1
 
     if det == 0:
-        # 线段平行或共线
         return None
     else:
-        dx3 = x1 - x3
-        dy3 = y1 - y3
+        dx3, dy3 = x1 - x3, y1 - y3
 
         det1 = dx1 * dy3 - dx3 * dy1
         det2 = dx2 * dy3 - dx3 * dy2
 
         if det1 == 0 and det2 == 0:
-            # 线段共线
             return None
         elif det1 == 0 or det2 == 0:
-            # 线段平行
             return None
         else:
             s = det1 / det
             t = det2 / det
 
             if 0 <= s <= 1 and 0 <= t <= 1:
-                # 计算交点坐标
-                intersection_x = x1 + (dx1 * t)
-                intersection_y = y1 + (dy1 * t)
-                return (intersection_x, intersection_y)
+                intersection_x = x1 + dx1 * t
+                intersection_y = y1 + dy1 * t
+                return intersection_x, intersection_y
             else:
-                # 线段相交但交点不在线段上
                 return None
-
 
 def shrink_rectangle(vertices, center_x, center_y, multiple):
     """
@@ -56,20 +47,18 @@ def shrink_rectangle(vertices, center_x, center_y, multiple):
 
     return np.array(new_vertices, dtype=np.int32) 
 
-def preprocess_image(image_path):
+# 读入图片
+
+def preprocess_image(img):
     """
     对输入图像进行预处理，包括灰度转换、高斯模糊、Canny边缘检测，并返回边缘图像及其中的轮廓信息。
-
     参数:
         image_path (str): 待处理图像的路径
-
     返回:
         tuple: 包含以下元素的元组：
             - edges (np.ndarray): Canny边缘检测后的图像（灰度图像）
             - contours (list): 边缘图像中的轮廓信息列表
     """
-    global img
-    img = cv2.imread(image_path)  # 读取图像
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # 转换为灰度图像
     blur = cv2.GaussianBlur(gray, (5, 5), 0)  # 高斯滤波去噪
     edges = cv2.Canny(blur, 100, 200)  # 使用Canny算子进行边缘检测
@@ -151,9 +140,10 @@ def draw_contour_and_vertices(img, vertices):
                     cv2.LINE_AA)
 
 if __name__ == '__main__':
-    img = None
-    contours = preprocess_image('img/rg.jpg')
+    img = cv2.imread('img/rg.jpg')
+    contours = preprocess_image(img)
     max_perimeter, max_cnt = find_max_perimeter_contour(contours)
+
     if max_cnt is not None:
         vertices = find_contour_xy(max_cnt, max_perimeter)
         draw_contour_and_vertices(img, vertices) 
