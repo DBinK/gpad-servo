@@ -133,6 +133,16 @@ if max_cnt is not None:   # 如果找到周长最大的轮廓
         cv2.line(img, (new_x3, new_y3), (new_x4, new_y4), (0, 255, 0), 1)
         cv2.line(img, (new_x4, new_y4), (new_x1, new_y1), (0, 255, 0), 1)
 
+        cv2.circle(img, (new_x1, new_y1), 5, (0, 0, 255), -1)
+        cv2.circle(img, (new_x2, new_y2), 5, (0, 0, 255), -1)
+        cv2.circle(img, (new_x3, new_y3), 5, (0, 0, 255), -1)
+        cv2.circle(img, (new_x4, new_y4), 5, (0, 0, 255), -1)
+
+        cv2.putText(img, f'({int(new_x1)}, {int(new_x1)})', (int(new_x1)+5, int(new_y1)-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+        cv2.putText(img, f'({int(new_x2)}, {int(new_y2)})', (int(new_x2)+5, int(new_y2)-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+        cv2.putText(img, f'({int(new_x3)}, {int(new_y3)})', (int(new_x3)+5, int(new_y3)-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+        cv2.putText(img, f'({int(new_x4)}, {int(new_y4)})', (int(new_x4)+5, int(new_y4)-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+
 # 显示的图像
 cv2.imshow('final', img)
 cv2.imwrite('out/x-out.jpg', img)
