@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 
-
 def calculate_intersection(vertices):
     """
     计算四边形对角线的交点。
