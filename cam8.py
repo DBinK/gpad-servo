@@ -102,74 +102,92 @@ def find_max_perimeter_contour(contours):
     return max_perimeter, max_cnt
 
 def find_contour_xy(contour, max_perimeter):
-    approx = cv2.approxPolyDP(contour, 0.02 * max_perimeter, True)  # 近似多边形
+    """
+    :param contour: 轮廓
+    :param max_perimeter: 最大周长
+    :return: 轮廓中心点坐标
+    """
+    if max_perimeter is not None:
+        approx = cv2.approxPolyDP(contour, 0.02 * max_perimeter, True)  # 近似多边形
 
-    if len(approx) == 4:  # 如果是四边形,计算四边形的四个顶点坐标并返回
-        vertices = approx.reshape(4, 2)  # 计算四边形的四个顶点坐标并返回
-        return vertices
+        if len(approx) == 4:  # 如果是四边形,计算四边形的四个顶点坐标并返回
+            vertices = approx.reshape(4, 2)  # 计算四边形的四个顶点坐标并返回
+            return vertices
 
-def draw_contour_and_vertices(img, vertices):  # 绘制轮廓和顶点和交点
+def draw_contour_and_vertices(img, vertices):
+    """
+    绘制轮廓和顶点和交点
+    :param img: 输入图像
+    :param vertices: 顶点坐标
+    :return: 绘制后的图像
+    """
+    if vertices is not None:
+        cv2.drawContours(img, [vertices], 0, (255, 0, 0), 2)  # 绘制四边形的边框
 
-    cv2.drawContours(img, [vertices], 0, (255, 0, 0), 2)  # 绘制四边形的边框
+        for i, vertex in enumerate(vertices):  # 绘制每个角点和坐标
+            cv2.circle(img, (vertex[0], vertex[1]), 5, (0, 0, 255), -1)
+            cv2.putText(
+                img,
+                f"({vertex[0]}, {vertex[1]})",
+                (vertex[0] + 5, vertex[1] - 5),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5, (0, 0, 255), 1, cv2.LINE_AA,
+            )
 
-    for i, vertex in enumerate(vertices):  # 绘制每个角点和坐标
-        cv2.circle(img, (vertex[0], vertex[1]), 5, (0, 0, 255), -1)
-        cv2.putText(
+        cv2.line(  # 绘制对角线
             img,
-            f"({vertex[0]}, {vertex[1]})",
-            (vertex[0] + 5, vertex[1] - 5),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5, (0, 0, 255), 1, cv2.LINE_AA,
+            (vertices[0][0], vertices[0][1]),
+            (vertices[2][0], vertices[2][1]),
+            (0, 255, 0), 1,
         )
-
-    cv2.line(  # 绘制对角线
-        img,
-        (vertices[0][0], vertices[0][1]),
-        (vertices[2][0], vertices[2][1]),
-        (0, 255, 0), 1,
-    )
-    cv2.line(
-        img,
-        (vertices[1][0], vertices[1][1]),
-        (vertices[3][0], vertices[3][1]),
-        (0, 255, 0), 1,
-    )
-
-    intersection = calculate_intersection(vertices)  # 计算两个对角线的交点
-
-    # 绘制交点和坐标
-    if intersection is not None:
-        cv2.circle(
-            img, (int(intersection[0]), int(intersection[1])), 5, (0, 0, 255), -1
-        )
-        cv2.putText(
+        cv2.line(
             img,
-            f"({int(intersection[0])}, {int(intersection[1])})",
-            (int(intersection[0]) + 5, int(intersection[1]) - 5),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5, (0, 0, 255), 1, cv2.LINE_AA,
-        )
-    # 输出交点的坐标
-    if intersection is not None:
-        print(f"交点的坐标: ({intersection[0]}, {intersection[1]})")
-
-    # 绘制等比缩小后的图像
-    new_vertices = shrink_rectangle(
-        vertices, intersection[0], intersection[1], (0.5 / 0.6)
-    )
-    cv2.drawContours(img, [new_vertices], 0, (255, 0, 0), 2)  # 绘制四边形的边框
-
-    for vertex in new_vertices:
-        cv2.circle(img, tuple(vertex), 5, (0, 0, 255), -1)
-        cv2.putText(
-            img,
-            f"({int(vertex[0])}, {int(vertex[1])})",
-            (int(vertex[0]) + 5, int(vertex[1]) - 5),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5, (0, 0, 255), 1, cv2.LINE_AA,
+            (vertices[1][0], vertices[1][1]),
+            (vertices[3][0], vertices[3][1]),
+            (0, 255, 0), 1,
         )
 
-    return img
+        intersection = calculate_intersection(vertices)  # 计算两个对角线的交点
+
+        # 绘制交点和坐标
+        if intersection is not None:
+            cv2.circle(
+                img, (int(intersection[0]), int(intersection[1])), 5, (0, 0, 255), -1
+            )
+            cv2.putText(
+                img,
+                f"({int(intersection[0])}, {int(intersection[1])})",
+                (int(intersection[0]) + 5, int(intersection[1]) - 5),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5, (0, 0, 255), 1, cv2.LINE_AA,
+            )
+        # 输出交点的坐标
+        if intersection is not None:
+            print(f"交点的坐标: ({intersection[0]}, {intersection[1]})")
+        
+        # cv2.imshow("img", img)
+        return img, intersection
+def draw_max_cnt_rectangle(img, vertices):  # 绘制轮廓和顶点和交点
+    if vertices is not None:
+        img, intersection = draw_contour_and_vertices(img, vertices)
+        
+        # 绘制等比缩小后的图像
+        new_vertices = shrink_rectangle(
+            vertices, intersection[0], intersection[1], (0.5 / 0.6)
+        )
+        cv2.drawContours(img, [new_vertices], 0, (255, 0, 0), 2)  # 绘制四边形的边框
+
+        for vertex in new_vertices:
+            cv2.circle(img, tuple(vertex), 5, (0, 0, 255), -1)
+            cv2.putText(
+                img,
+                f"({int(vertex[0])}, {int(vertex[1])})",
+                (int(vertex[0]) + 5, int(vertex[1]) - 5),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5, (0, 0, 255), 1, cv2.LINE_AA,
+            )
+
+        return img
 
 
 if __name__ == "__main__":

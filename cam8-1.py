@@ -27,10 +27,10 @@ for cnt in contours:
         # 近似多边形
         approx = cv2.approxPolyDP(cnt, 0.02 * perimeter, True)
 
-        # 如果是矩形,则绘制边框
+        
         if len(approx) == 4:
-            x, y, w, h = cv2.boundingRect(approx)
-            #cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            # x, y, w, h = cv2.boundingRect(approx)  # 绘制矩形边框
+            # cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
             # 绘制四边形的边框
             cv2.drawContours(img, [approx], 0, (255, 0, 0), 2)
 
