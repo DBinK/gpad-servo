@@ -1,6 +1,4 @@
 import cv2
-#import numpy as np
-
 import numpy as np
 def calculate_intersection(vertices):
     x1, y1 = vertices[0]
@@ -56,7 +54,7 @@ def shrink_rectangle(vertices, center_x, center_y, multiple):
         new_y = int(center_y + (vertex[1] - center_y) * multiple)
         new_vertices.append([new_x, new_y])
 
-    return np.array(new_vertices, dtype=np.int32)
+    return np.array(new_vertices, dtype=np.int32) 
 
 def preprocess_image(image_path):
     """
@@ -88,8 +86,8 @@ def find_max_perimeter_contour(contours):
 
     返回:
     tuple: 包含以下内容的元组：
-      - max_perimeter (float): 输入轮廓中所有轮廓的最大周长。
-      - max_cnt (Numpy数组): 具有最大周长的轮廓。
+        - max_perimeter (float): 输入轮廓中所有轮廓的最大周长。
+        - max_cnt (Numpy数组): 具有最大周长的轮廓。
     """
     # 初始化最大周长及对应轮廓变量
     max_perimeter = 0
@@ -152,7 +150,6 @@ def draw_contour_and_vertices(img, vertices):
                     1,  # 线宽度
                     cv2.LINE_AA)
 
-
 if __name__ == '__main__':
     img = None
     contours = preprocess_image('img/rg.jpg')
@@ -163,9 +160,7 @@ if __name__ == '__main__':
     
     if vertices is not None:
         print(f'四个顶点坐标: {vertices}')
-        print(f'四个顶点坐标: {vertices.reshape(-1)}')
     
-
     # 显示的图像
     cv2.imshow('final', img)
     cv2.imwrite('out/x-out.jpg', img)

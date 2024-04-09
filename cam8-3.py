@@ -102,9 +102,7 @@ if max_cnt is not None:   # 如果找到周长最大的轮廓
         cv2.line(img, (vertices[0][0], vertices[0][1]), (vertices[2][0], vertices[2][1]), (0, 255, 0), 1)
         cv2.line(img, (vertices[1][0], vertices[1][1]), (vertices[3][0], vertices[3][1]), (0, 255, 0), 1)
 
-        """ # 计算两个对角线的交点
-        line1 = (vertices[0], vertices[2])
-        line2 = (vertices[1], vertices[3]) """
+        # 计算两个对角线的交点
         intersection = calculate_intersection(vertices)
 
         # 绘制交点和坐标
