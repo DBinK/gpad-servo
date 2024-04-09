@@ -1,5 +1,5 @@
 import cv2
-import numpy as np
+#import numpy as np
 
 def calculate_intersection(line1, line2):
     x1, y1 = line1[0]
