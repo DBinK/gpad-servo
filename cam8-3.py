@@ -65,7 +65,7 @@ def shrink_rectangle(x1, y1, x2, y2, x3, y3, x4, y4, center_x, center_y, multipl
 
     return int(new_x1), int(new_y1), int(new_x2), int(new_y2), int(new_x3), int(new_y3), int(new_x4), int(new_y4)
 
-img = cv2.imread('img/w2.jpg')                # 读取图像
+img = cv2.imread('img/rg.jpg')                # 读取图像
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # 转换为灰度图像
 blur = cv2.GaussianBlur(gray, (5, 5), 0)      # 高斯滤波去噪
 edges = cv2.Canny(blur, 100, 200)             # 使用Canny算子进行边缘检测
@@ -125,7 +125,7 @@ if max_cnt is not None:   # 如果找到周长最大的轮廓
         x4,y4 = vertices[3]
 
         # 绘制等比缩小后的图像
-        new_x1, new_y1, new_x2, new_y2, new_x3, new_y3, new_x4, new_y4 = shrink_rectangle(x1, y1, x2, y2, x3, y3, x4, y4, intersection[0], intersection[1], 0.80)
+        new_x1, new_y1, new_x2, new_y2, new_x3, new_y3, new_x4, new_y4 = shrink_rectangle(x1, y1, x2, y2, x3, y3, x4, y4, intersection[0], intersection[1], (0.5/0.6))
 
         # 绘制连接线
         cv2.line(img, (new_x1, new_y1), (new_x2, new_y2), (0, 255, 0), 1)
