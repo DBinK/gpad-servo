@@ -1,6 +1,15 @@
 import cv2
 import numpy as np
 def calculate_intersection(vertices):
+    """
+    计算四个顶点组成的多边形的交点。
+    
+    参数:
+    vertices: 一个包含四个顶点坐标的列表，每个顶点是一个二元组(x, y)。
+    
+    返回值:
+    如果存在交点，返回交点的坐标(x, y)；如果不存在交点，返回None。
+    """
     x1, y1 = vertices[0]
     x2, y2 = vertices[2]
     x3, y3 = vertices[1]
@@ -11,28 +20,25 @@ def calculate_intersection(vertices):
     
     det = dx1 * dy2 - dx2 * dy1
 
-    if det == 0:
+    if det == 0 or (dx1 == 0 and dx2 == 0) or (dy1 == 0 and dy2 == 0):
         return None
+
+    dx3, dy3 = x1 - x3, y1 - y3
+    det1 = dx1 * dy3 - dx3 * dy1
+    det2 = dx2 * dy3 - dx3 * dy2
+
+    if det1 == 0 or det2 == 0:
+        return None
+
+    s = det1 / det
+    t = det2 / det
+
+    if 0 <= s <= 1 and 0 <= t <= 1:
+        intersection_x = x1 + dx1 * t
+        intersection_y = y1 + dy1 * t
+        return intersection_x, intersection_y
     else:
-        dx3, dy3 = x1 - x3, y1 - y3
-
-        det1 = dx1 * dy3 - dx3 * dy1
-        det2 = dx2 * dy3 - dx3 * dy2
-
-        if det1 == 0 and det2 == 0:
-            return None
-        elif det1 == 0 or det2 == 0:
-            return None
-        else:
-            s = det1 / det
-            t = det2 / det
-
-            if 0 <= s <= 1 and 0 <= t <= 1:
-                intersection_x = x1 + dx1 * t
-                intersection_y = y1 + dy1 * t
-                return intersection_x, intersection_y
-            else:
-                return None
+        return None
 
 def shrink_rectangle(vertices, center_x, center_y, multiple):
     """
@@ -60,10 +66,9 @@ def preprocess_image(img):
             - contours (list): 边缘图像中的轮廓信息列表
     """
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # 转换为灰度图像
-    blur = cv2.GaussianBlur(gray, (5, 5), 0)  # 高斯滤波去噪
-    edges = cv2.Canny(blur, 100, 200)  # 使用Canny算子进行边缘检测
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)      # 高斯滤波去噪
+    edges = cv2.Canny(blur, 100, 200)             # 使用Canny算子进行边缘检测
     contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)  # 查找轮廓
-
     return contours
 
 def find_max_perimeter_contour(contours):
@@ -121,7 +126,11 @@ def draw_contour_and_vertices(img, vertices):
     # 绘制交点和坐标
     if intersection is not None:
         cv2.circle(img, (int(intersection[0]), int(intersection[1])), 5, (0, 0, 255), -1)
-        cv2.putText(img, f'({int(intersection[0])}, {int(intersection[1])})', (int(intersection[0])+5, int(intersection[1])-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+        cv2.putText(img, 
+                    f'({int(intersection[0])}, {int(intersection[1])})', 
+                    (int(intersection[0])+5, int(intersection[1])-5), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 
+                    0.5, (0, 0, 255), 1, cv2.LINE_AA)
     # 输出交点的坐标
     if intersection is not None:
         print(f'交点的坐标: ({intersection[0]}, {intersection[1]})')
