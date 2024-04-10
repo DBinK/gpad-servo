@@ -71,5 +71,5 @@ def main():
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-if __name__ == '__main__':
+if __name__ == '__main__':                                                                                                          
     main()
