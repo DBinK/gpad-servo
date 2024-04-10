@@ -2,14 +2,14 @@ import cv2
 from cam8 import preprocess_image, find_max_perimeter_contour, find_contour_xy, calculate_intersection , draw_contour_and_vertices, draw_max_cnt_rectangle
 
 if __name__ == "__main__":
-    img = cv2.imread("img/w3.jpg")
+    img = cv2.imread("img/w2.jpg")
     contours = preprocess_image(img)
     max_perimeter, max_cnt = find_max_perimeter_contour(contours)
 
     if max_cnt is not None:
         vertices = find_contour_xy(max_cnt, max_perimeter)
         fin_img, intersection = draw_contour_and_vertices(img, vertices)
-        ##fin_img = draw_max_cnt_rectangle(fin_img, vertices)
+        fin_img = draw_max_cnt_rectangle(fin_img, vertices)
 
     if vertices is not None:
         intersection = calculate_intersection(vertices)
