@@ -12,7 +12,7 @@ class ThreadedCamera(object):
         self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 2)  # 设置最大缓冲区大小
 
         # 设定帧率为30帧每秒
-        self.FPS = 1 / 60
+        self.FPS = 1 / 30
         self.FPS_MS = int(self.FPS * 1000)
 
         # 启动帧检索线程
@@ -60,7 +60,8 @@ class ThreadedCamera(object):
         cv2.waitKey(self.FPS_MS)
 
 if __name__ == '__main__':
-    stream_url = 'http://192.168.100.71:4747/video?640x480'
+    # 320x240 640x480 960x720 1280x720 1920x1080
+    stream_url = 'http://192.168.100.4:4747/video?640x480'
     threaded_camera = ThreadedCamera(stream_url)
     
     while True:
