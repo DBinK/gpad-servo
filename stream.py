@@ -5,7 +5,6 @@ from threading import Thread
 from cam8 import draw_contour_and_vertices, find_contour_xy, find_max_perimeter_contour, preprocess_image
 
 
-
 class ThreadedCamera(object):
     def __init__(self, url):
         self.capture = cv2.VideoCapture(url)
@@ -46,6 +45,15 @@ class ThreadedCamera(object):
         
         #processed_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # 示例：将帧转换为灰度图像
         return processed_frame
+
+    def stream_as_mjpeg(self, processed_frame):
+        # 启动一个http服务器，推送mjpeg流
+        while True:
+            processed_frame = self.process_frame(self.frame)
+            if processed_frame is not None:
+                ret, jpeg = cv2.imencode('.jpg', processed_frame)
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n\r\n')
 
     def show_frame(self):
         cv2.namedWindow('Original MJPEG Stream', cv2.WINDOW_NORMAL)
