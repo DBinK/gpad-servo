@@ -1,5 +1,6 @@
 # Python-specific ignores
 **/__pycache__/
+**/__pycache__/*
 **/*.py[cod]
 **/*.so
 **/*.pyd
