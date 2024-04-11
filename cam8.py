@@ -147,7 +147,7 @@ def draw_contour_and_vertices(img, vertices):
             (vertices[3][0], vertices[3][1]),
             (0, 255, 0), 1,
         )
-
+        global intersection
         intersection = calculate_intersection(vertices)  # 计算两个对角线的交点
 
         # 绘制交点和坐标
@@ -167,9 +167,10 @@ def draw_contour_and_vertices(img, vertices):
             print(f"交点的坐标: ({intersection[0]}, {intersection[1]})") """
         
         # cv2.imshow("img", img)
-        return img #, intersection
+        return img , intersection
 def draw_max_cnt_rectangle(img, vertices):  # 绘制轮廓和顶点和交点
-    if vertices is not None:
+    global intersection
+    if vertices is not None and intersection:
         img, intersection = draw_contour_and_vertices(img, vertices)
         
         # 绘制等比缩小后的图像

@@ -12,7 +12,7 @@ class ThreadedCamera(object):
         self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 2)  # 设置最大缓冲区大小
 
         # 设定帧率为30帧每秒
-        self.FPS = 1 / 30
+        self.FPS = 1 / 10
         self.FPS_MS = int(self.FPS * 1000)
 
         # 启动帧检索线程
@@ -39,7 +39,8 @@ class ThreadedCamera(object):
             vertices = find_contour_xy(max_cnt, max_perimeter)
 
         if vertices is not None:
-            frame = draw_contour_and_vertices(frame, vertices)
+            frame = draw_contour_and_vertices(frame, vertices)[0]
+            #frame = draw_max_cnt_rectangle(frame, vertices)
 
         processed_frame = frame
         
@@ -48,17 +49,17 @@ class ThreadedCamera(object):
 
     def show_frame(self):
         cv2.namedWindow('Original MJPEG Stream', cv2.WINDOW_NORMAL)
-        cv2.resizeWindow('Original MJPEG Stream', 800, 600)
+        #cv2.resizeWindow('Original MJPEG Stream', 800, 600)
         cv2.namedWindow('Processed Stream', cv2.WINDOW_NORMAL)
-        cv2.resizeWindow('Processed Stream', 800, 600)
-        
+        #cv2.resizeWindow('Processed Stream', 800, 600)
+
         cv2.imshow('Original MJPEG Stream', self.frame)
         processed_frame = self.process_frame(self.frame)
         cv2.imshow('Processed Stream', processed_frame)
         cv2.waitKey(self.FPS_MS)
 
 if __name__ == '__main__':
-    stream_url = 'http://192.168.50.4:4747/video?1920x1080'
+    stream_url = 'http://192.168.50.4:4747/video?640x480'
     threaded_camera = ThreadedCamera(stream_url)
     
     while True:
