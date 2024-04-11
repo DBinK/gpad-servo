@@ -59,7 +59,7 @@ def preprocess_image(img):
     """
     对输入图像进行预处理，包括灰度转换、高斯模糊、Canny边缘检测，并返回边缘图像及其中的轮廓信息。
     参数:
-        image_path (str): 待处理图像的路径
+        img (np.ndarray): 待处理图像
     返回:
         tuple: 包含以下元素的元组：
             - edges (np.ndarray): Canny边缘检测后的图像（灰度图像）
@@ -111,7 +111,8 @@ def find_contour_xy(contour, max_perimeter):
         approx = cv2.approxPolyDP(contour, 0.02 * max_perimeter, True)  # 近似多边形
 
         if len(approx) == 4:  # 如果是四边形,计算四边形的四个顶点坐标并返回
-            vertices = approx.reshape(4, 2)  # 计算四边形的四个顶点坐标并返回
+            vertices = approx.reshape(4, 2)  
+            print(vertices)
             return vertices
 
 def draw_contour_and_vertices(img, vertices):
@@ -162,11 +163,11 @@ def draw_contour_and_vertices(img, vertices):
                 0.5, (0, 0, 255), 1, cv2.LINE_AA,
             )
         # 输出交点的坐标
-        if intersection is not None:
-            print(f"交点的坐标: ({intersection[0]}, {intersection[1]})")
+        """ if intersection is not None:
+            print(f"交点的坐标: ({intersection[0]}, {intersection[1]})") """
         
         # cv2.imshow("img", img)
-        return img, intersection
+        return img #, intersection
 def draw_max_cnt_rectangle(img, vertices):  # 绘制轮廓和顶点和交点
     if vertices is not None:
         img, intersection = draw_contour_and_vertices(img, vertices)
