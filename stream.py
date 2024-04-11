@@ -2,7 +2,7 @@ import cv2
 import time
 from threading import Thread
 
-from cam8 import draw_contour_and_vertices, draw_max_cnt_rectangle, find_contour_xy, find_max_perimeter_contour, preprocess_image
+from cam8 import draw_contour_and_vertices, find_contour_xy, find_max_perimeter_contour, preprocess_image
 
 
 
@@ -12,7 +12,7 @@ class ThreadedCamera(object):
         self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 2)  # 设置最大缓冲区大小
 
         # 设定帧率为30帧每秒
-        self.FPS = 1 / 10
+        self.FPS = 1 / 60
         self.FPS_MS = int(self.FPS * 1000)
 
         # 启动帧检索线程
@@ -39,7 +39,7 @@ class ThreadedCamera(object):
             vertices = find_contour_xy(max_cnt, max_perimeter)
 
         if vertices is not None:
-            frame = draw_contour_and_vertices(frame, vertices)[0]
+            frame = draw_contour_and_vertices(frame, vertices)
             #frame = draw_max_cnt_rectangle(frame, vertices)
 
         processed_frame = frame
@@ -55,11 +55,12 @@ class ThreadedCamera(object):
 
         cv2.imshow('Original MJPEG Stream', self.frame)
         processed_frame = self.process_frame(self.frame)
-        cv2.imshow('Processed Stream', processed_frame)
+        if processed_frame is not None:
+            cv2.imshow('Processed Stream', processed_frame)
         cv2.waitKey(self.FPS_MS)
 
 if __name__ == '__main__':
-    stream_url = 'http://192.168.50.4:4747/video?640x480'
+    stream_url = 'http://192.168.100.71:4747/video?640x480'
     threaded_camera = ThreadedCamera(stream_url)
     
     while True:
