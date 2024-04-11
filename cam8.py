@@ -69,10 +69,10 @@ def preprocess_image(img):
 
     blur = cv2.GaussianBlur(gray, (5, 5), 0)  # 高斯滤波去噪
 
-    # 二值化
-    _, edges = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    #_, threshold = cv2.threshold(blur, 2, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    _, threshold = cv2.threshold(blur, 233, 255, cv2.THRESH_BINARY) # 二值化
 
-    edges = cv2.Canny(blur, 100, 200)  # 使用Canny算子进行边缘检测
+    edges = cv2.Canny(threshold, 100, 200)  # 使用Canny算子进行边缘检测
     contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)  # 查找轮廓
     return contours
 
@@ -197,7 +197,7 @@ def draw_contour_and_vertices(img, vertices):
 
 
 if __name__ == "__main__":
-    img = cv2.imread("img/rg.jpg")
+    img = cv2.imread("img/c.jpg")
     contours = preprocess_image(img)
     max_perimeter, max_cnt = find_max_perimeter_contour(contours)
 
