@@ -66,7 +66,12 @@ def preprocess_image(img):
             - contours (list): 边缘图像中的轮廓信息列表
     """
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # 转换为灰度图像
+
     blur = cv2.GaussianBlur(gray, (5, 5), 0)  # 高斯滤波去噪
+
+    # 二值化
+    _, edges = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
     edges = cv2.Canny(blur, 100, 200)  # 使用Canny算子进行边缘检测
     contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)  # 查找轮廓
     return contours
