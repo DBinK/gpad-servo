@@ -12,7 +12,7 @@ class ThreadedCamera(object):
         self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 2)  # 设置最大缓冲区大小
 
         # 设定帧率为30帧每秒
-        self.FPS = 1 / 30
+        self.FPS = 1 / 60
         self.FPS_MS = int(self.FPS * 1000)
 
         # 启动帧检索线程
