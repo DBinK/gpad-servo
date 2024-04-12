@@ -34,13 +34,13 @@ class ThreadedCamera(object):
         # 例如，可以进行图像处理、对象检测、人脸识别等
 
         contours = preprocess_image(frame)
-        max_perimeter, max_cnt = find_max_perimeter_contour(contours, 999999)
+        max_perimeter, max_cnt = find_max_perimeter_contour(contours, 999999) # 最大允许周长
 
         if max_cnt is not None:
             vertices = find_contour_xy(max_cnt, max_perimeter)
 
         if vertices is not None:
-            frame = draw_contour_and_vertices(frame, vertices, (500/600)) #外框与内框宽度之比
+            frame = draw_contour_and_vertices(frame, vertices, (500/600)) # 外框与内框宽度之比 靶纸是 (276/297)
 
         processed_frame = frame
         
