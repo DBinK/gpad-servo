@@ -76,34 +76,36 @@ def preprocess_image(img):
     contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)  # 查找轮廓
     return contours
 
-def find_max_perimeter_contour(contours):
+def find_max_perimeter_contour(contours, max_allowed_perimeter):
     """
-    给定一组轮廓列表，该函数用于识别具有最大周长的轮廓，并返回最大周长值及对应的轮廓。
+    给定一组轮廓列表，该函数用于识别具有最大周长（不超过指定最大允许周长）的轮廓，并返回最大周长值及对应的轮廓。
 
     参数:
     - contours (list): 一个轮廓列表，其中每个轮廓表示为包含(x, y)坐标的Numpy数组。
+    - max_allowed_perimeter (float, optional): 最大允许周长限制。只考虑周长小于等于此值的轮廓，默认值为无穷大（无限制）。
 
     返回:
     tuple: 包含以下内容的元组：
-        - max_perimeter (float): 输入轮廓中所有轮廓的最大周长。
-        - max_cnt (Numpy数组): 具有最大周长的轮廓。
+        - max_perimeter (float): 输入轮廓中满足条件的所有轮廓中的最大周长。
+        - max_cnt (Numpy数组): 具有最大周长（不超过指定最大允许周长）的轮廓。
+        - found (bool): 如果找到符合条件的轮廓，则为True，否则为False。
     """
-    # 初始化最大周长及对应轮廓变量
+
+    # 初始化最大周长及对应轮廓变量，以及标志位表示是否找到符合条件的轮廓
     max_perimeter = 0
     max_cnt = None
 
     # 遍历轮廓列表
     for cnt in contours:
-        # 计算当前轮廓的面积和周长
-        # area = cv2.contourArea(cnt)
+        # 计算当前轮廓的周长
         perimeter = cv2.arcLength(cnt, True)
 
-        # 若当前轮廓周长大于当前最大周长
-        if perimeter > max_perimeter:
+        # 若当前轮廓周长在允许范围内且大于当前最大周长
+        if perimeter <= max_allowed_perimeter and perimeter > max_perimeter:
             max_perimeter = perimeter
             max_cnt = cnt
 
-    # 返回最大周长及其对应的轮廓
+    # 返回最大周长及其对应的轮廓，以及是否找到符合条件轮廓的标志位
     return max_perimeter, max_cnt
 
 def find_contour_xy(contour, max_perimeter):
@@ -120,11 +122,12 @@ def find_contour_xy(contour, max_perimeter):
             print(vertices)
             return vertices
 
-def draw_contour_and_vertices(img, vertices):
+def draw_contour_and_vertices(img, vertices, scale):
     """
     绘制轮廓和顶点和交点
     :param img: 输入图像
     :param vertices: 顶点坐标
+    :param scale: 内部缩放比例
     :return: 绘制后的图像
     """
     if vertices is not None:
@@ -179,7 +182,7 @@ def draw_contour_and_vertices(img, vertices):
         
             # 绘制等比缩小后的图像
             new_vertices = shrink_rectangle(
-                vertices, intersection[0], intersection[1], (0.5 / 0.6)
+                vertices, intersection[0], intersection[1], (scale) #(0.5 / 0.6) # 等比缩小比例
             )
             cv2.drawContours(img, [new_vertices], 0, (255, 0, 0), 2)  # 绘制四边形的边框
 
@@ -197,13 +200,13 @@ def draw_contour_and_vertices(img, vertices):
 
 
 if __name__ == "__main__":
-    img = cv2.imread("img/c.jpg")
+    img = cv2.imread("img/rg.jpg")
     contours = preprocess_image(img)
-    max_perimeter, max_cnt = find_max_perimeter_contour(contours)
+    max_perimeter, max_cnt = find_max_perimeter_contour(contours, 1090*4)
 
     if max_cnt is not None:
         vertices = find_contour_xy(max_cnt, max_perimeter)
-        draw_contour_and_vertices(img, vertices)
+        draw_contour_and_vertices(img, vertices, (276 / 297)) # (0.5/0.6)
 
     if vertices is not None:
         print(f"四个顶点坐标: {vertices}")
