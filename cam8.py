@@ -69,8 +69,8 @@ def preprocess_image(img):
 
     blur = cv2.GaussianBlur(gray, (5, 5), 0)  # 高斯滤波去噪
 
-    #_, threshold = cv2.threshold(blur, 2, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    _, threshold = cv2.threshold(blur, 233, 255, cv2.THRESH_BINARY) # 二值化
+    _, threshold = cv2.threshold(blur, 2, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    #_, threshold = cv2.threshold(blur, 233, 255, cv2.THRESH_BINARY) # 二值化
 
     edges = cv2.Canny(threshold, 100, 200)  # 使用Canny算子进行边缘检测
     contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)  # 查找轮廓
