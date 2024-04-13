@@ -113,7 +113,7 @@ def find_max_perimeter_contour(contours, max_allowed_perimeter, min_allowed_peri
 
             perimeter_allowed = (perimeter <= max_allowed_perimeter) and (perimeter >= min_allowed_perimeter)
             # 若当前轮廓周长在允许范围内、大于当前最大周长且角度大于等于75度
-            if perimeter_allowed and perimeter > max_perimeter and all(angle >= 75 for angle in cosines):
+            if perimeter_allowed and perimeter > max_perimeter and all(angle >= 45 for angle in cosines):
                 max_perimeter = perimeter
                 vertices = approx.reshape(4, 2)
 

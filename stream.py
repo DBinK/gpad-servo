@@ -31,34 +31,32 @@ class ThreadedCamera(object):
             time.sleep(self.FPS)
 
     def process_frame_outside(self, frame):
-        # 在这里添加您的OpenCV处理代码
-        # 例如，可以进行图像处理、对象检测、人脸识别等
+        # 创建一个副本来存储处理后的帧
+        processed_frame = frame.copy()
 
-        contours = preprocess_image(frame)
+        # 在这里添加OpenCV处理代码
+        contours = preprocess_image(processed_frame)
         if contours is not None:
             vertices = find_max_perimeter_contour(contours, 999999999, 300*4) # 最大允许周长
             print(f"四个顶点坐标:\n {vertices}")
 
         if vertices is not None:
-            frame = draw_contour_and_vertices(frame, vertices, (500/600)) # 外框与内框宽度之比 
+            processed_frame = draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
 
-        processed_frame = frame
-        
         return processed_frame
     
     def process_frame_inside(self, frame):
-        # 在这里添加您的OpenCV处理代码
-        # 例如，可以进行图像处理、对象检测、人脸识别等
+         # 创建一个副本来存储处理后的帧
+        processed_frame = frame.copy()
 
-        contours = preprocess_image(frame)
-        
+        # 在这里添加OpenCV处理代码
+        contours = preprocess_image(processed_frame)
         if contours is not None:
             vertices = find_max_perimeter_contour(contours, 20000*4, 500*4) # 最大,最小允许周长(mm)
+            print(f"四个顶点坐标:\n {vertices}")
 
         if vertices is not None:
-            frame = draw_contour_and_vertices(frame, vertices, (276/297)) # 外框与内框宽度之比(mm) 靶纸是 (276/297)
-
-        processed_frame = frame
+            processed_frame = draw_contour_and_vertices(processed_frame, vertices, (276/297)) # 外框与内框宽度之比(mm) 靶纸是 (276/297)
         
         return processed_frame
 
