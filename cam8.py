@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from typing import List, Tuple
+from typing import List
 
 def calculate_intersection(vertices):
     """
@@ -63,13 +63,18 @@ def preprocess_image(img):
     参数:
         img (np.ndarray): 待处理图像
     返回:
-        tuple: 包含以下元素的元组：
-            - edges (np.ndarray): Canny边缘检测后的图像（灰度图像）
-            - contours (list): 边缘图像中的轮廓信息列表
+        contours (list): 边缘图像中的轮廓信息列表
     """
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # 转换为灰度图像
+    def increase_saturation(img, factor):
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        hsv[:, :, 1] = np.clip(hsv[:, :, 1] * factor, 0, 255)
+        return cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+    
+    #gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # 转换为灰度图像
 
-    blur = cv2.GaussianBlur(gray, (5, 5), 0)  # 高斯滤波去噪
+    blur = cv2.GaussianBlur(img, (5, 5), 0)  # 高斯滤波去噪
+
+    blur = increase_saturation(blur, 11) # 增加饱和度，以更好区分背景和前景
 
     #_, threshold = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     #_, threshold = cv2.threshold(blur, 157, 255, cv2.THRESH_BINARY) # 二值化
@@ -78,7 +83,6 @@ def preprocess_image(img):
 
     contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)  # 查找轮廓
     return contours
-
 
 def find_max_perimeter_contour(contours, max_allowed_perimeter, min_allowed_perimeter):
     # 输入参数校验
@@ -119,8 +123,7 @@ def find_max_perimeter_contour(contours, max_allowed_perimeter, min_allowed_peri
 
     # 检查是否找到符合条件的轮廓
     if vertices is None:
-        # 返回空列表代替None，或可选择抛出异常
-        return []
+        return None
     else:
         return vertices
 
@@ -134,73 +137,75 @@ def draw_contour_and_vertices(img: cv2.Mat, vertices: List[List[int]], scale: fl
     :param vertices: 四边形的顶点列表，格式为[[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
     :param scale: 缩小比例
     :return: 绘制后的图像
-    """
+        """
+    if vertices:
+        try:
+            cv2.drawContours(img, [vertices], 0, (255, 0, 0), 2)  # 绘制四边形的边框
 
-    try:
-        cv2.drawContours(img, [vertices], 0, (255, 0, 0), 2)  # 绘制四边形的边框
-
-        for i, vertex in enumerate(vertices):  # 绘制每个角点和坐标
-            cv2.circle(img, (vertex[0], vertex[1]), 5, (0, 0, 255), -1)
-            cv2.putText(
-                img,
-                f"({vertex[0]}, {vertex[1]})",
-                (vertex[0] + 5, vertex[1] - 5),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5, (0, 0, 255), 1, cv2.LINE_AA,
-            )
-
-        cv2.line(  # 绘制对角线
-            img,
-            (vertices[0][0], vertices[0][1]),
-            (vertices[2][0], vertices[2][1]),
-            (0, 255, 0), 1,
-        )
-        cv2.line(
-            img,
-            (vertices[1][0], vertices[1][1]),
-            (vertices[3][0], vertices[3][1]),
-            (0, 255, 0), 1,
-        )
-        
-        intersection = calculate_intersection(vertices)  # 计算两个对角线的交点
-
-        # 绘制交点和坐标
-        if intersection is not None:
-            cv2.circle(
-                img, (int(intersection[0]), int(intersection[1])), 5, (0, 0, 255), -1
-            )
-            cv2.putText(
-                img,
-                f"({int(intersection[0])}, {int(intersection[1])})",
-                (int(intersection[0]) + 5, int(intersection[1]) - 5),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.5, (0, 0, 255), 1, cv2.LINE_AA,
-            )
-        
-            # 绘制等比缩小后的图像
-            new_vertices = shrink_rectangle(
-                vertices, intersection[0], intersection[1], scale
-            )
-            cv2.drawContours(img, [new_vertices], 0, (255, 0, 0), 2)  # 绘制四边形的边框
-
-            for vertex in new_vertices:
-                cv2.circle(img, vertex, 5, (0, 0, 255), -1)
+            for i, vertex in enumerate(vertices):  # 绘制每个角点和坐标
+                cv2.circle(img, (vertex[0], vertex[1]), 5, (0, 0, 255), -1)
                 cv2.putText(
                     img,
-                    f"({int(vertex[0])}, {int(vertex[1])})",
+                    f"({vertex[0]}, {vertex[1]})",
                     (vertex[0] + 5, vertex[1] - 5),
                     cv2.FONT_HERSHEY_SIMPLEX,
                     0.5, (0, 0, 255), 1, cv2.LINE_AA,
                 )
 
-    except Exception as e:
-        print(f"绘制过程中发生错误: {e}")
-    
-    return img
+            cv2.line(  # 绘制对角线
+                img,
+                (vertices[0][0], vertices[0][1]),
+                (vertices[2][0], vertices[2][1]),
+                (0, 255, 0), 1,
+            )
+            cv2.line(
+                img,
+                (vertices[1][0], vertices[1][1]),
+                (vertices[3][0], vertices[3][1]),
+                (0, 255, 0), 1,
+            )
+            
+            intersection = calculate_intersection(vertices)  # 计算两个对角线的交点
+
+            # 绘制交点和坐标
+            if intersection is not None:
+                cv2.circle(
+                    img, (int(intersection[0]), int(intersection[1])), 5, (0, 0, 255), -1
+                )
+                cv2.putText(
+                    img,
+                    f"({int(intersection[0])}, {int(intersection[1])})",
+                    (int(intersection[0]) + 5, int(intersection[1]) - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.5, (0, 0, 255), 1, cv2.LINE_AA,
+                )
+            
+                # 绘制等比缩小后的图像
+                new_vertices = shrink_rectangle(
+                    vertices, intersection[0], intersection[1], scale
+                )
+                cv2.drawContours(img, [new_vertices], 0, (255, 0, 0), 2)  # 绘制四边形的边框
+
+                for vertex in new_vertices:
+                    cv2.circle(img, vertex, 5, (0, 0, 255), -1)
+                    cv2.putText(
+                        img,
+                        f"({int(vertex[0])}, {int(vertex[1])})",
+                        (vertex[0] + 5, vertex[1] - 5),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5, (0, 0, 255), 1, cv2.LINE_AA,
+                    )
+
+        except Exception as e:
+            print(f"绘制过程中发生错误: {e}")
+        
+        return img
+    else:
+        return img
 
 
 if __name__ == "__main__":
-    img = cv2.imread("img/rg.jpg")
+    img = cv2.imread("img/i.png")
     contours = preprocess_image(img)
 
     if contours is not None:
