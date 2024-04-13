@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 
+from typing import List, Tuple
+
 def calculate_intersection(vertices):
     """
     计算四边形对角线的交点。
@@ -69,68 +71,71 @@ def preprocess_image(img):
 
     blur = cv2.GaussianBlur(gray, (5, 5), 0)  # 高斯滤波去噪
 
-    _, threshold = cv2.threshold(blur, 2, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    #_, threshold = cv2.threshold(blur, 233, 255, cv2.THRESH_BINARY) # 二值化
+    #_, threshold = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    #_, threshold = cv2.threshold(blur, 157, 255, cv2.THRESH_BINARY) # 二值化
+    #edges = cv2.Canny(threshold, 10, 200)  # 使用Canny算子进行边缘检测
+    edges = cv2.Canny(blur, 100, 200)
 
-    edges = cv2.Canny(threshold, 100, 200)  # 使用Canny算子进行边缘检测
     contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)  # 查找轮廓
     return contours
 
+
 def find_max_perimeter_contour(contours, max_allowed_perimeter):
-    """
-    给定一组轮廓列表，该函数用于识别具有最大周长（不超过指定最大允许周长）的轮廓，并返回最大周长值及对应的轮廓。
-
-    参数:
-    - contours (list): 一个轮廓列表，其中每个轮廓表示为包含(x, y)坐标的Numpy数组。
-    - max_allowed_perimeter (float, optional): 最大允许周长限制。只考虑周长小于等于此值的轮廓，默认值为无穷大（无限制）。
-
-    返回:
-    tuple: 包含以下内容的元组：
-        - max_perimeter (float): 输入轮廓中满足条件的所有轮廓中的最大周长。
-        - max_cnt (Numpy数组): 具有最大周长（不超过指定最大允许周长）的轮廓。
-        - found (bool): 如果找到符合条件的轮廓，则为True，否则为False。
-    """
+    # 输入参数校验
+    if not contours or max_allowed_perimeter <= 0:
+        raise ValueError("输入的轮廓列表不能为空，且最大允许周长必须为正数。")
 
     # 初始化最大周长及对应轮廓变量，以及标志位表示是否找到符合条件的轮廓
     max_perimeter = 0
-    max_cnt = None
+    vertices = None
 
     # 遍历轮廓列表
     for cnt in contours:
-        # 计算当前轮廓的周长
-        perimeter = cv2.arcLength(cnt, True)
+        # 将当前轮廓近似为四边形
+        approx = cv2.approxPolyDP(cnt, 0.02 * cv2.arcLength(cnt, True), True)
 
-        # 若当前轮廓周长在允许范围内且大于当前最大周长
-        if perimeter <= max_allowed_perimeter and perimeter > max_perimeter:
-            max_perimeter = perimeter
-            max_cnt = cnt
+        # 确保转换后的形状为四边形
+        if len(approx) == 4:
+            # 计算四边形周长
+            perimeter = cv2.arcLength(approx, True)
 
-    # 返回最大周长及其对应的轮廓，以及是否找到符合条件轮廓的标志位
-    return max_perimeter, max_cnt
+            # 计算四边形角度
+            cosines = []
+            for i in range(4):
+                p0 = approx[i][0]
+                p1 = approx[(i + 1) % 4][0]
+                p2 = approx[(i + 2) % 4][0]
+                v1 = p0 - p1
+                v2 = p2 - p1
+                cosine_angle = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+                angle = np.arccos(cosine_angle) * 180 / np.pi
+                cosines.append(angle)
 
-def find_contour_xy(contour, max_perimeter):
+            # 若当前轮廓周长在允许范围内、大于当前最大周长且角度大于等于75度
+            if perimeter <= max_allowed_perimeter and perimeter > max_perimeter and all(angle >= 75 for angle in cosines):
+                max_perimeter = perimeter
+                vertices = approx.reshape(4, 2)
+
+    # 检查是否找到符合条件的轮廓
+    if vertices is None:
+        # 返回空列表代替None，或可选择抛出异常
+        return []
+    else:
+        return vertices
+
+
+
+def draw_contour_and_vertices(img: cv2.Mat, vertices: List[List[int]], scale: float) -> cv2.Mat:
     """
-    :param contour: 轮廓
-    :param max_perimeter: 最大周长
-    :return: 轮廓中心点坐标
-    """
-    if max_perimeter is not None:
-        approx = cv2.approxPolyDP(contour, 0.02 * max_perimeter, True)  # 近似多边形
-
-        if len(approx) == 4:  # 如果是四边形,计算四边形的四个顶点坐标并返回
-            vertices = approx.reshape(4, 2)  
-            print(vertices)
-            return vertices
-
-def draw_contour_and_vertices(img, vertices, scale):
-    """
-    绘制轮廓和顶点和交点
-    :param img: 输入图像
-    :param vertices: 顶点坐标
-    :param scale: 内部缩放比例
+    在图像上绘制四边形的轮廓、顶点、对角线、交点，并等比缩小重新绘制。
+    
+    :param img: 输入的OpenCV图像
+    :param vertices: 四边形的顶点列表，格式为[[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
+    :param scale: 缩小比例
     :return: 绘制后的图像
     """
-    if vertices is not None:
+
+    try:
         cv2.drawContours(img, [vertices], 0, (255, 0, 0), 2)  # 绘制四边形的边框
 
         for i, vertex in enumerate(vertices):  # 绘制每个角点和坐标
@@ -170,43 +175,36 @@ def draw_contour_and_vertices(img, vertices, scale):
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5, (0, 0, 255), 1, cv2.LINE_AA,
             )
-            # 输出交点的坐标
-            """ if intersection is not None:
-                print(f"交点的坐标: ({intersection[0]}, {intersection[1]})") """
-            
-            """return img , intersection
-    def draw_max_cnt_rectangle(img, vertices):  # 绘制等比缩小后的轮廓和顶点和交点
-
-        if vertices is not None:
-            img, intersection = draw_contour_and_vertices(img, vertices) """
         
             # 绘制等比缩小后的图像
             new_vertices = shrink_rectangle(
-                vertices, intersection[0], intersection[1], (scale) #(0.5 / 0.6) # 等比缩小比例
+                vertices, intersection[0], intersection[1], scale
             )
             cv2.drawContours(img, [new_vertices], 0, (255, 0, 0), 2)  # 绘制四边形的边框
 
             for vertex in new_vertices:
-                cv2.circle(img, tuple(vertex), 5, (0, 0, 255), -1)
+                cv2.circle(img, vertex, 5, (0, 0, 255), -1)
                 cv2.putText(
                     img,
                     f"({int(vertex[0])}, {int(vertex[1])})",
-                    (int(vertex[0]) + 5, int(vertex[1]) - 5),
+                    (vertex[0] + 5, vertex[1] - 5),
                     cv2.FONT_HERSHEY_SIMPLEX,
                     0.5, (0, 0, 255), 1, cv2.LINE_AA,
                 )
 
-            return img #, intersection
+    except Exception as e:
+        print(f"绘制过程中发生错误: {e}")
+    
+    return img
 
 
 if __name__ == "__main__":
     img = cv2.imread("img/rg.jpg")
     contours = preprocess_image(img)
-    max_perimeter, max_cnt = find_max_perimeter_contour(contours, 1090*4)
 
-    if max_cnt is not None:
-        vertices = find_contour_xy(max_cnt, max_perimeter)
-        draw_contour_and_vertices(img, vertices, (276 / 297)) # (0.5/0.6)
+    if contours is not None:
+        vertices = find_max_perimeter_contour(contours, 10090*4)
+        img = draw_contour_and_vertices(img, vertices, (276 / 297)) # (0.5/0.6)
 
     if vertices is not None:
         print(f"四个顶点坐标: {vertices}")

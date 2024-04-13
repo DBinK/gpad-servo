@@ -4,7 +4,7 @@ import time
 import keyboard
 from threading import Thread
 
-from cam8 import draw_contour_and_vertices, find_contour_xy, find_max_perimeter_contour, preprocess_image
+from cam8 import draw_contour_and_vertices, find_max_perimeter_contour, preprocess_image
 
 
 class ThreadedCamera(object):
@@ -35,10 +35,8 @@ class ThreadedCamera(object):
         # 例如，可以进行图像处理、对象检测、人脸识别等
 
         contours = preprocess_image(frame)
-        max_perimeter, max_cnt = find_max_perimeter_contour(contours, 999999) # 最大允许周长
-
-        if max_cnt is not None:
-            vertices = find_contour_xy(max_cnt, max_perimeter)
+        if contours is not None:
+            vertices = find_max_perimeter_contour(contours, 999999999) # 最大允许周长
 
         if vertices is not None:
             frame = draw_contour_and_vertices(frame, vertices, (500/600)) # 外框与内框宽度之比 靶纸是 (276/297)
@@ -52,10 +50,9 @@ class ThreadedCamera(object):
         # 例如，可以进行图像处理、对象检测、人脸识别等
 
         contours = preprocess_image(frame)
-        max_perimeter, max_cnt = find_max_perimeter_contour(contours, 500*4) # 最大允许周长(mm)
-
-        if max_cnt is not None:
-            vertices = find_contour_xy(max_cnt, max_perimeter)
+        
+        if contours is not None:
+            vertices = find_max_perimeter_contour(contours, 20000*4) # 最大允许周长(mm)
 
         if vertices is not None:
             frame = draw_contour_and_vertices(frame, vertices, (276/297)) # 外框与内框宽度之比(mm) 靶纸是 (276/297)
@@ -64,7 +61,7 @@ class ThreadedCamera(object):
         
         return processed_frame
 
-    def show_frame(self):
+    def show_frame(self):  # 本地调试显示用
         cv2.namedWindow('Original MJPEG Stream', cv2.WINDOW_NORMAL)
         #cv2.resizeWindow('Original MJPEG Stream', 800, 600)
         cv2.namedWindow('Processed Stream', cv2.WINDOW_NORMAL)
@@ -91,14 +88,15 @@ class ThreadedCamera(object):
 
 def generate_frames():        
     # 320x240 640x480 960x720 1280x720 1920x1080
-    url = 'http://192.168.100.4:4747/video?640x480'
+    #url = 'http://192.168.100.44:4747/video?960x720'
+    url = 'http://192.168.100.44:4747/video?640x480'
     stream = ThreadedCamera(url)
 
     while True:
         frame = stream.frame
         if frame is not None:
             try:
-                processed_frame = stream.process_frame_outside(frame)
+                processed_frame = stream.process_frame_inside(frame)
                 # 将处理后的帧编码为JPEG格式
                 _, jpeg_buffer = cv2.imencode('.jpg', processed_frame)
 
@@ -138,9 +136,19 @@ def key_listener():
 
 if __name__ == '__main__':
     # 创建一个线程来监听控制台按键输入
-    key_thread = Thread(target=key_listener)
-    key_thread.start()
+    #key_thread = Thread(target=key_listener)
+    #key_thread.start()
 
-    app.run(host='0.0.0.0', debug=True)
+    #app.run(host='0.0.0.0', debug=True)
+
+    # 320x240 640x480 960x720 1280x720 1920x1080
+    stream_url = 'http://192.168.100.44:4747/video?960x720'
+    threaded_camera = ThreadedCamera(stream_url)
+    
+    while True:
+        try:
+            threaded_camera.show_frame()
+        except AttributeError:
+            pass
 
 
