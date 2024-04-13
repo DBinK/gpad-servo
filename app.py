@@ -1,27 +1,24 @@
-from flask import Flask
-import threading
+import keyboard
+import time
 
-app = Flask(__name__)
-# 在控制台监听按键输入的线程函数
-def console_input_thread():
+from threading import Thread
 
-    user_input = input("输入指令: ")
-    if user_input.lower() == 'q':
-        print("q")
-    if user_input.lower() == 'm':
-        print("m")
-
-# 启动控制台输入监听线程
-input_thread = threading.Thread(target=console_input_thread)
-input_thread.start()
-
-# Flask路由
-@app.route('/')
-def index():
-    return 'Hello, World!'
+def key_listener():
+    def release(event):
+        print(event.name)
+        if event.event_type == keyboard.KEY_UP:
+            time.sleep(0.5)   # 消除抖动
+            if event.name == 'q':
+                print("q is pressed")
+            elif event.name == 'w':
+                print("w is pressed")
+            elif event.name == 'e':
+                print("e is pressed")
+    
+    keyboard.on_release(release)  # 注册按键监听器
+    keyboard.wait()  # 保持监听状态
 
 if __name__ == '__main__':
-    app.run()
-
-# 等待控制台输入线程结束
-input_thread.join(
+    # 创建一个线程来监听控制台按键输入
+    key_thread = Thread(target=key_listener)
+    key_thread.start()

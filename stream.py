@@ -1,6 +1,7 @@
 from flask import Flask, render_template, Response
 import cv2
 import time
+import keyboard
 from threading import Thread
 
 from cam8 import draw_contour_and_vertices, find_contour_xy, find_max_perimeter_contour, preprocess_image
@@ -86,11 +87,11 @@ class ThreadedCamera(object):
         except AttributeError:
             pass """
 
-app = Flask(__name__)
+
 
 def generate_frames():        
     # 320x240 640x480 960x720 1280x720 1920x1080
-    url = 'http://192.168.50.4:4747/video?640x480'
+    url = 'http://192.168.100.4:4747/video?640x480'
     stream = ThreadedCamera(url)
 
     while True:
@@ -109,6 +110,8 @@ def generate_frames():
                 # 可以选择跳过该帧，继续处理下一帧，或者返回一个默认图像（如全黑图像）
                 continue
 
+app = Flask(__name__)
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -117,5 +120,27 @@ def index():
 def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
+# 定义按键监听函数
+def key_listener():
+    def release(event):
+        print(event.name)
+        if event.event_type == keyboard.KEY_UP:
+            time.sleep(0.5)   # 消除抖动
+            if event.name == 'q':
+                print("q is pressed")
+            elif event.name == 'w':
+                print("w is pressed")
+            elif event.name == 'e':
+                print("e is pressed")
+    
+    keyboard.on_release(release)  # 注册按键监听器
+    keyboard.wait()  # 保持监听状态
+
 if __name__ == '__main__':
+    # 创建一个线程来监听控制台按键输入
+    key_thread = Thread(target=key_listener)
+    key_thread.start()
+
     app.run(host='0.0.0.0', debug=True)
+
+
