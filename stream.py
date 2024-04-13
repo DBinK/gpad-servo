@@ -37,7 +37,7 @@ class ThreadedCamera(object):
         # 在这里添加OpenCV处理代码
         contours = preprocess_image(processed_frame)
         if contours is not None:
-            vertices = find_max_perimeter_contour(contours, 999999999, 300*4) # 最大,最小允许周长(mm)
+            vertices = find_max_perimeter_contour(contours, 999999999, 400*4) # 最大,最小允许周长(mm)
 
         if vertices is not None:
             print(f"四个顶点坐标:\n {vertices}")
@@ -52,7 +52,7 @@ class ThreadedCamera(object):
         # 在这里添加OpenCV处理代码
         contours = preprocess_image(processed_frame)
         if contours is not None:
-            vertices = find_max_perimeter_contour(contours, 20000*4, 500*4) # 最大,最小允许周长(mm)
+            vertices = find_max_perimeter_contour(contours, 20000*4, 30*4) # 最大,最小允许周长(mm)
             print(f"四个顶点坐标:\n {vertices}")
 
         if vertices is not None:
