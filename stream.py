@@ -36,7 +36,7 @@ class ThreadedCamera(object):
 
         contours = preprocess_image(frame)
         if contours is not None:
-            vertices = find_max_perimeter_contour(contours, 999999999) # 最大允许周长
+            vertices = find_max_perimeter_contour(contours, 999999999, 300*4) # 最大允许周长
 
         if vertices is not None:
             frame = draw_contour_and_vertices(frame, vertices, (500/600)) # 外框与内框宽度之比 靶纸是 (276/297)
@@ -52,7 +52,7 @@ class ThreadedCamera(object):
         contours = preprocess_image(frame)
         
         if contours is not None:
-            vertices = find_max_perimeter_contour(contours, 20000*4) # 最大允许周长(mm)
+            vertices = find_max_perimeter_contour(contours, 20000*4, 500*4) # 最大,最小允许周长(mm)
 
         if vertices is not None:
             frame = draw_contour_and_vertices(frame, vertices, (276/297)) # 外框与内框宽度之比(mm) 靶纸是 (276/297)
