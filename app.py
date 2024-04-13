@@ -1,33 +1,27 @@
-from flask import Flask, render_template, Response
-import cv2
-
-from stream import ThreadedCamera
+from flask import Flask
+import threading
 
 app = Flask(__name__)
+# 在控制台监听按键输入的线程函数
+def console_input_thread():
 
-def generate_frames():
-    # 320x240 640x480 960x720 1280x720 1920x1080
-    url = 'http://192.168.100.4:4747/video?640x480'
-    stream = ThreadedCamera(url)
+    user_input = input("输入指令: ")
+    if user_input.lower() == 'q':
+        print("q")
+    if user_input.lower() == 'm':
+        print("m")
 
-    while True:
-        frame = stream.frame
-        if frame is not None:
-            processed_frame = stream.process_frame(frame)
-            # 将处理后的帧编码为JPEG格式
-            ret, jpeg_buffer = cv2.imencode('.jpg', processed_frame)
+# 启动控制台输入监听线程
+input_thread = threading.Thread(target=console_input_thread)
+input_thread.start()
 
-            # 拼接MJPEG帧并返回
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + jpeg_buffer.tobytes() + b'\r\n')
-
+# Flask路由
 @app.route('/')
 def index():
-    return render_template('index.html')
-
-@app.route('/video_feed')
-def video_feed():
-    return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return 'Hello, World!'
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    app.run()
+
+# 等待控制台输入线程结束
+input_thread.join(
