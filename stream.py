@@ -13,7 +13,7 @@ class ThreadedCamera(object):
         self.capture = cv2.VideoCapture(url)
         self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 2)  # 设置最大缓冲区大小
 
-        # 设定帧率为30帧每秒
+        # 设定帧率
         self.FPS = 1 / 60
         self.FPS_MS = int(self.FPS * 1000)
 
@@ -37,9 +37,10 @@ class ThreadedCamera(object):
         contours = preprocess_image(frame)
         if contours is not None:
             vertices = find_max_perimeter_contour(contours, 999999999, 300*4) # 最大允许周长
+            print(f"四个顶点坐标:\n {vertices}")
 
         if vertices is not None:
-            frame = draw_contour_and_vertices(frame, vertices, (500/600)) # 外框与内框宽度之比 靶纸是 (276/297)
+            frame = draw_contour_and_vertices(frame, vertices, (500/600)) # 外框与内框宽度之比 
 
         processed_frame = frame
         
@@ -68,23 +69,10 @@ class ThreadedCamera(object):
         #cv2.resizeWindow('Processed Stream', 800, 600)
 
         cv2.imshow('Original MJPEG Stream', self.frame)
-        processed_frame = self.process_frame_outside(self.frame)
+        processed_frame = self.process_frame_outside(self.frame)  #!记得改这里
         if processed_frame is not None:
             cv2.imshow('Processed Stream', processed_frame)
         cv2.waitKey(self.FPS_MS)
-
-""" if __name__ == '__main__':
-    # 320x240 640x480 960x720 1280x720 1920x1080
-    stream_url = 'http://192.168.100.4:4747/video?640x480'
-    threaded_camera = ThreadedCamera(stream_url)
-    
-    while True:
-        try:
-            threaded_camera.show_frame()
-        except AttributeError:
-            pass """
-
-
 
 def generate_frames():        
     # 320x240 640x480 960x720 1280x720 1920x1080
@@ -96,7 +84,7 @@ def generate_frames():
         frame = stream.frame
         if frame is not None:
             try:
-                processed_frame = stream.process_frame_inside(frame)
+                processed_frame = stream.process_frame_outside(frame)
                 # 将处理后的帧编码为JPEG格式
                 _, jpeg_buffer = cv2.imencode('.jpg', processed_frame)
 

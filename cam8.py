@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from typing import List, Tuple
+from typing import List
 
 def calculate_intersection(vertices):
     """
@@ -120,7 +120,7 @@ def find_max_perimeter_contour(contours, max_allowed_perimeter, min_allowed_peri
     # 检查是否找到符合条件的轮廓
     if vertices is None:
         # 返回空列表代替None，或可选择抛出异常
-        return []
+        return None
     else:
         return vertices
 
@@ -136,8 +136,13 @@ def draw_contour_and_vertices(img: cv2.Mat, vertices: List[List[int]], scale: fl
     :return: 绘制后的图像
     """
 
-    try:
-        cv2.drawContours(img, [vertices], 0, (255, 0, 0), 2)  # 绘制四边形的边框
+    try:   
+        if vertices is not None:
+            # 将四边形顶点列表转换为适合drawContours()的格式
+            contour = np.array([vertices], dtype=np.int32)  # 创建一个二维numpy数组，形状为(1, N, 2)，其中N为顶点数
+            cv2.drawContours(img, [contour], 0, (255, 0, 0), 2)  # 绘制四边形的边框
+        else: 
+            print("顶点无效或缺失,跳过轮廓绘制。")  
 
         for i, vertex in enumerate(vertices):  # 绘制每个角点和坐标
             cv2.circle(img, (vertex[0], vertex[1]), 5, (0, 0, 255), -1)
