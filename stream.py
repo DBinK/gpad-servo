@@ -37,16 +37,16 @@ class ThreadedCamera(object):
         # 在这里添加OpenCV处理代码
         contours = preprocess_image(processed_frame)
         if contours is not None:
-            vertices = find_max_perimeter_contour(contours, 999999999, 300*4) # 最大允许周长
-            print(f"四个顶点坐标:\n {vertices}")
+            vertices = find_max_perimeter_contour(contours, 999999999, 300*4) # 最大,最小允许周长(mm)
 
         if vertices is not None:
+            print(f"四个顶点坐标:\n {vertices}")
             processed_frame = draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
 
         return processed_frame
     
     def process_frame_inside(self, frame):
-         # 创建一个副本来存储处理后的帧
+        # 创建一个副本来存储处理后的帧
         processed_frame = frame.copy()
 
         # 在这里添加OpenCV处理代码

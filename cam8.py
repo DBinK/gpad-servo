@@ -71,10 +71,21 @@ def preprocess_image(img):
 
     blur = cv2.GaussianBlur(gray, (5, 5), 0)  # 高斯滤波去噪
 
+    """     # 颜色量化
+    div = 16
+    blur = blur // div * div + div // 2 """
+
+    # 减小曝光
+    #exposure_adjusted = cv2.addWeighted(blur, 0.5, np.zeros(blur.shape, dtype=blur.dtype), 0, 50)
+
+    # 增加对比度（直方图均衡化）
+    #blur = cv2.convertScaleAbs(blur, alpha=0.5, beta=-50)
+    blur = cv2.convertScaleAbs(blur, alpha=1.5, beta=-90)
+
     #_, threshold = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     #_, threshold = cv2.threshold(blur, 157, 255, cv2.THRESH_BINARY) # 二值化
     #edges = cv2.Canny(threshold, 10, 200)  # 使用Canny算子进行边缘检测
-    edges = cv2.Canny(blur, 100, 200)
+    edges = cv2.Canny(blur, 50, 200)
 
     contours, _ = cv2.findContours(edges, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)  # 查找轮廓
     return contours
@@ -92,30 +103,31 @@ def find_max_perimeter_contour(contours, max_allowed_perimeter, min_allowed_peri
     # 遍历轮廓列表
     for cnt in contours:
         # 将当前轮廓近似为四边形
-        approx = cv2.approxPolyDP(cnt, 0.02 * cv2.arcLength(cnt, True), True)
+        approx = cv2.approxPolyDP(cnt, 0.09 * cv2.arcLength(cnt, True), True)
 
         # 确保转换后的形状为四边形
         if len(approx) == 4:
             # 计算四边形周长
             perimeter = cv2.arcLength(approx, True)
-
-            # 计算四边形角度
-            cosines = []
-            for i in range(4):
-                p0 = approx[i][0]
-                p1 = approx[(i + 1) % 4][0]
-                p2 = approx[(i + 2) % 4][0]
-                v1 = p0 - p1
-                v2 = p2 - p1
-                cosine_angle = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
-                angle = np.arccos(cosine_angle) * 180 / np.pi
-                cosines.append(angle)
-
             perimeter_allowed = (perimeter <= max_allowed_perimeter) and (perimeter >= min_allowed_perimeter)
-            # 若当前轮廓周长在允许范围内、大于当前最大周长且角度大于等于75度
-            if perimeter_allowed and perimeter > max_perimeter and all(angle >= 45 for angle in cosines):
-                max_perimeter = perimeter
-                vertices = approx.reshape(4, 2)
+            
+            if perimeter_allowed and perimeter > max_perimeter:
+                # 计算四边形角度
+                cosines = []
+                for i in range(4):
+                    p0 = approx[i][0]
+                    p1 = approx[(i + 1) % 4][0]
+                    p2 = approx[(i + 2) % 4][0]
+                    v1 = p0 - p1
+                    v2 = p2 - p1
+                    cosine_angle = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+                    angle = np.arccos(cosine_angle) * 180 / np.pi
+                    cosines.append(angle)
+
+                # 若当前轮廓周长在允许范围内、大于当前最大周长且角度大于等于75度
+                if all(angle >= 45 for angle in cosines):
+                    max_perimeter = perimeter
+                    vertices = approx.reshape(4, 2)
 
     # 检查是否找到符合条件的轮廓
     if vertices is None:
@@ -123,8 +135,6 @@ def find_max_perimeter_contour(contours, max_allowed_perimeter, min_allowed_peri
         return None
     else:
         return vertices
-
-
 
 def draw_contour_and_vertices(img: cv2.Mat, vertices: List[List[int]], scale: float) -> cv2.Mat:
     """
@@ -203,13 +213,17 @@ def draw_contour_and_vertices(img: cv2.Mat, vertices: List[List[int]], scale: fl
     
     return img
 
+img = None
 
 if __name__ == "__main__":
-    img = cv2.imread("img/rg.jpg")
+    print("开始")
+    #img = cv2.imread("img/rg.jpg")
+    
+    img = cv2.imread("img/n.png")
     contours = preprocess_image(img)
 
     if contours is not None:
-        vertices = find_max_perimeter_contour(contours, 10090*4, 880*4)
+        vertices = find_max_perimeter_contour(contours, 10090*4, 88*4)
         img = draw_contour_and_vertices(img, vertices, (276 / 297)) # (0.5/0.6)
 
     if vertices is not None:
