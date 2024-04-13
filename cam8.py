@@ -80,7 +80,7 @@ def preprocess_image(img):
 
     # 增加对比度（直方图均衡化）
     #blur = cv2.convertScaleAbs(blur, alpha=0.5, beta=-50)
-    blur = cv2.convertScaleAbs(blur, alpha=1.5, beta=-90)
+    blur = cv2.convertScaleAbs(blur, alpha=1, beta=-120)
 
     #_, threshold = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     #_, threshold = cv2.threshold(blur, 157, 255, cv2.THRESH_BINARY) # 二值化
@@ -223,7 +223,7 @@ if __name__ == "__main__":
     contours = preprocess_image(img)
 
     if contours is not None:
-        vertices = find_max_perimeter_contour(contours, 10090*4, 88*4)
+        vertices = find_max_perimeter_contour(contours, 10090*4, 200*4)
         img = draw_contour_and_vertices(img, vertices, (276 / 297)) # (0.5/0.6)
 
     if vertices is not None:
