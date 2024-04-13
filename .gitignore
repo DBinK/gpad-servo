@@ -1,0 +1,24 @@
+# Python-specific ignores
+__pycache__/
+**/__pycache__/
+**/__pycache__/*
+**/*.py[cod]
+**/*.so
+**/*.pyd
+**/*.dll
+**/*.pyo
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+virtualenv/
+.conda/
+pipenv/
+.venv.bak/
+pyvenv.cfg
+
+# Jupyter Notebook related files
+.ipynb_checkpoints/
+*.ipynb~

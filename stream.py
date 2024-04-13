@@ -34,14 +34,13 @@ class ThreadedCamera(object):
         # 例如，可以进行图像处理、对象检测、人脸识别等
 
         contours = preprocess_image(frame)
-        max_perimeter, max_cnt = find_max_perimeter_contour(contours)
+        max_perimeter, max_cnt = find_max_perimeter_contour(contours, 999999) # 最大允许周长
 
         if max_cnt is not None:
             vertices = find_contour_xy(max_cnt, max_perimeter)
 
         if vertices is not None:
-            frame = draw_contour_and_vertices(frame, vertices)
-            #frame = draw_max_cnt_rectangle(frame, vertices)
+            frame = draw_contour_and_vertices(frame, vertices, (500/600)) # 外框与内框宽度之比 靶纸是 (276/297)
 
         processed_frame = frame
         
@@ -75,7 +74,7 @@ app = Flask(__name__)
 
 def generate_frames():        
     # 320x240 640x480 960x720 1280x720 1920x1080
-    url = 'http://192.168.100.4:4747/video?640x480'
+    url = 'http://192.168.50.4:4747/video?640x480'
     stream = ThreadedCamera(url)
 
     while True:
