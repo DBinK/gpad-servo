@@ -37,7 +37,7 @@ class ThreadedCamera(object):
         # 在这里添加OpenCV处理代码
         contours = preprocess_image(processed_frame)
         if contours is not None:
-            vertices = find_max_perimeter_contour(contours, 999999999, 400*4) # 最大,最小允许周长(mm)
+            vertices = find_max_perimeter_contour(contours, 999999999, 100*4) # 最大,最小允许周长(mm)
 
         if vertices is not None:
             print(f"四个顶点坐标:\n {vertices}")
@@ -75,7 +75,7 @@ class ThreadedCamera(object):
 def generate_frames():        
     # 320x240 640x480 960x720 1280x720 1920x1080
     #url = 'http://192.168.100.44:4747/video?960x720'
-    url = 'http://192.168.100.44:4747/video?640x480'
+    url = 'http://192.168.100.44:4747/video?960x720'
     stream = ThreadedCamera(url)
 
     while True:
