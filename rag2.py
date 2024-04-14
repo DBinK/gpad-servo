@@ -16,6 +16,15 @@ def find_largest_blob(image, color):
     # 转换颜色空间为HSV
     hsv = cv.cvtColor(image, cv.COLOR_BGR2HSV)
 
+    #降低曝光度
+    hsv[:, :, 2] = hsv[:, :, 2] * 1
+
+    rgb = cv.cvtColor(image, cv.COLOR_HSV2BGR)
+    cv.imshow('Result', rgb)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+
     if color == 'red':
         # 红色范围
         lower = np.array([0, 100, 100])
@@ -55,7 +64,7 @@ def find_largest_blob(image, color):
     return [color,x,y]
 
 def main():
-    image = cv.imread("img/rg.jpg")
+    image = cv.imread("img/red.png")
 
     # 查找最大的红点
     rimg = find_largest_blob(image, 'red')
@@ -63,7 +72,7 @@ def main():
     print(rimg)
 
     # 查找最大的绿点
-    find_largest_blob(image, 'green')
+    #find_largest_blob(image, 'green')
 
     # 显示结果图像
     cv.imshow('Result', image)

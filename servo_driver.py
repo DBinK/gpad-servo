@@ -29,7 +29,14 @@ class ServoController:
         """
         self.pca.channels[channel].duty_cycle, _ = self.angle_process(angle)
 
-    def test(self, max_angle=1350, min_angle=450, step=5, speed=0.01):
+    def led(self, channel: int, brightness: int):
+        """
+        控制指定通道的亮度。
+        """
+        self.pca.channels[channel].duty_cycle = brightness / 100 * 0xFFFF
+
+
+    def test_servo(self, max_angle=1350, min_angle=450, step=5, speed=0.01):
         """
         测试函数，用于测试舵机的旋转。
         """
@@ -47,8 +54,34 @@ class ServoController:
                 time.sleep(speed)
 
             time.sleep(1)
+    
+    def test_led(self, max_brightness=100, min_brightness=0, step=5, speed=0.01):
+        """
+        测试函数, 用于测试LED的亮度。
+        """
+        while True:
+            for i in range(min_brightness, max_brightness, step):
+                self.led(0, i)
+                print(i)
+                time.sleep(speed)
+            time.sleep(1)
+            for i in range(max_brightness, min_brightness, -step):
+                self.led(0, i)
+                print(i)
+                time.sleep(speed)
+            time.sleep(1)
 
+            self.led(0, 0)
+            time.sleep(0.5)
+            self.led(0, 100)
+            time.sleep(0.5)
+            self.led(0, 0)
+            time.sleep(0.5)
+            self.led(0, 100)
+            time.sleep(0.5)
+            
 
 if __name__ == '__main__':
     controller = ServoController()
-    controller.test()
+    controller.test_led()
+    controller.test_servo()

@@ -133,7 +133,7 @@ if __name__ == '__main__':
         app.run(host='0.0.0.0', debug=True)
     else:
         # 320x240 640x480 960x720 1280x720 1920x1080
-        stream_url = 'http://192.168.100.44:4747/video?960x720'
+        stream_url = 'http://192.168.100.4:4747/video?960x720'
         threaded_camera = ThreadedCamera(stream_url)
 
         while True:
