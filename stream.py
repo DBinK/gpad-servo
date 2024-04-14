@@ -1,10 +1,12 @@
+import platform
+
 from flask import Flask, render_template, Response
 import cv2
 import time
 import keyboard
 from threading import Thread
 
-from cam8 import draw_contour_and_vertices, find_max_perimeter_contour, preprocess_image
+from achieve.cam8 import draw_contour_and_vertices, find_max_perimeter_contour, preprocess_image
 
 
 class ThreadedCamera(object):
@@ -126,8 +128,8 @@ if __name__ == '__main__':
     # 创建一个线程来监听控制台按键输入
     #key_thread = Thread(target=key_listener)
     #key_thread.start()
-    mode = 1
-    if mode == 1:
+    
+    if platform.system() == 'Linux':
         app.run(host='0.0.0.0', debug=True)
     else:
         # 320x240 640x480 960x720 1280x720 1920x1080

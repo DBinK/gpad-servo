@@ -3,8 +3,7 @@ import pygame
 from time import sleep
 
 # 导入自定义的GPAD、伺服电机控制和平滑滤波器模块
-import gpad
-import servo
+from achieve import gpad, servo
 from smooth import SmoothFilter
 
 Smooth = 3  # 设定平滑滤波器的窗口大小

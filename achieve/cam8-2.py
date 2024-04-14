@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 # 读取图像
-img = cv2.imread('img/x.jpg')
+img = cv2.imread('../img/x.jpg')
 
 # 转换为灰度图像
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -57,6 +57,6 @@ for cnt in contours:
 
 # 显示的图像
 cv2.imshow('final', img)
-cv2.imwrite('out/x-out.jpg', img)
+cv2.imwrite('../out/x-out.jpg', img)
 cv2.waitKey(0)
 cv2.destroyAllWindows()

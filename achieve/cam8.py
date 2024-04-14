@@ -59,21 +59,11 @@ def shrink_rectangle(vertices, center_x, center_y, multiple):
 
 def preprocess_image(img):
     """
-    对输入图像进行预处理，包括灰度转换、高斯模糊、Canny边缘检测，并返回边缘图像及其中的轮廓信息。
-    参数:
-        img (np.ndarray): 待处理图像
-    返回:
-        tuple: 包含以下元素的元组：
-            - edges (np.ndarray): Canny边缘检测后的图像（灰度图像）
-            - contours (list): 边缘图像中的轮廓信息列表
+    对输入图像进行预处理，包括灰度转换、高斯模糊、Canny边缘检测，并返回其中的轮廓信息。
     """
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # 转换为灰度图像
 
     blur = cv2.GaussianBlur(gray, (3, 3), 0)  # 高斯滤波去噪
-
-    """     # 颜色量化
-    div = 16
-    blur = blur // div * div + div // 2 """
 
     # 减小曝光
     #exposure_adjusted = cv2.addWeighted(blur, 0.5, np.zeros(blur.shape, dtype=blur.dtype), 0, 50)
@@ -219,7 +209,7 @@ if __name__ == "__main__":
     print("开始")
     #img = cv2.imread("img/rg.jpg")
     
-    img = cv2.imread("img/n.png")
+    img = cv2.imread("../img/n.png")
     contours = preprocess_image(img)
 
     if contours is not None:
@@ -231,6 +221,6 @@ if __name__ == "__main__":
 
     # 显示的图像
     cv2.imshow("final", img)
-    cv2.imwrite("out/x-out.jpg", img)
+    cv2.imwrite("../out/x-out.jpg", img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
