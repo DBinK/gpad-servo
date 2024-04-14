@@ -75,7 +75,7 @@ class ThreadedCamera(object):
 def generate_frames():        
     # 320x240 640x480 960x720 1280x720 1920x1080
     #url = 'http://192.168.100.44:4747/video?960x720'
-    url = 'http://192.168.100.4:4747/video?960x720'
+    url = 'http://192.168.100.4:4747/video?640x480'
     stream = ThreadedCamera(url)
 
     while True:
