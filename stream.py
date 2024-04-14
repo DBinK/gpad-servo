@@ -32,6 +32,7 @@ class ThreadedCamera(object):
 
     def process_frame_outside(self, frame):
         # 创建一个副本来存储处理后的帧
+        global vertices
         processed_frame = frame.copy()
 
         # 在这里添加OpenCV处理代码
@@ -47,6 +48,7 @@ class ThreadedCamera(object):
     
     def process_frame_inside(self, frame):
         # 创建一个副本来存储处理后的帧
+        global vertices
         processed_frame = frame.copy()
 
         # 在这里添加OpenCV处理代码
@@ -124,18 +126,18 @@ if __name__ == '__main__':
     # 创建一个线程来监听控制台按键输入
     #key_thread = Thread(target=key_listener)
     #key_thread.start()
+    mode = 1
+    if mode == 1:
+        app.run(host='0.0.0.0', debug=True)
+    else:
+        # 320x240 640x480 960x720 1280x720 1920x1080
+        stream_url = 'http://192.168.100.44:4747/video?960x720'
+        threaded_camera = ThreadedCamera(stream_url)
 
-    app.run(host='0.0.0.0', debug=True)
-
-    
-    # 320x240 640x480 960x720 1280x720 1920x1080
-    """ stream_url = 'http://192.168.100.44:4747/video?960x720'
-    threaded_camera = ThreadedCamera(stream_url)
-    
-    while True:
-        try:
-            threaded_camera.show_frame()
-        except AttributeError:
-            pass """
+        while True:
+            try:
+                threaded_camera.show_frame()
+            except AttributeError:
+                pass
 
 
