@@ -33,7 +33,7 @@ class ServoController:
         """
         控制指定通道的亮度。
         """
-        self.pca.channels[channel].duty_cycle = brightness / 100 * 0xFFFF
+        self.pca.channels[channel].duty_cycle = int(brightness / 100 * 0xFFFF)
 
 
     def test_servo(self, max_angle=1350, min_angle=450, step=5, speed=0.01):
