@@ -69,7 +69,7 @@ def preprocess_image(img):
     """
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # 转换为灰度图像
 
-    blur = cv2.GaussianBlur(gray, (5, 5), 0)  # 高斯滤波去噪
+    blur = cv2.GaussianBlur(gray, (3, 3), 0)  # 高斯滤波去噪
 
     """     # 颜色量化
     div = 16
