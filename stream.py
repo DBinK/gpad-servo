@@ -76,7 +76,7 @@ class ThreadedCamera(object):
             cv2.imshow('Processed Stream', processed_frame)
         cv2.waitKey(self.FPS_MS)
 
-def generate_frames():        
+def generate_frames():     # 远程调试显示用
     # 320x240 640x480 960x720 1280x720 1920x1080
     #url = 'http://192.168.100.44:4747/video?960x720'
     url = 'http://192.168.100.4:4747/video?640x480'
@@ -133,8 +133,10 @@ if __name__ == '__main__':
         app.run(host='0.0.0.0', debug=True)
     else:
         # 320x240 640x480 960x720 1280x720 1920x1080
-        stream_url = 'http://192.168.100.4:4747/video?960x720'
-        threaded_camera = ThreadedCamera(stream_url)
+        # url = 'http://192.168.100.4:4747/video?960x720'
+        url = 3 # 使用本地摄像头
+
+        threaded_camera = ThreadedCamera(url)
 
         while True:
             try:
