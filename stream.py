@@ -6,7 +6,7 @@ import time
 import keyboard
 from threading import Thread
 
-from achieve.cam8 import draw_contour_and_vertices, find_max_perimeter_contour, preprocess_image
+from cam8 import draw_contour_and_vertices, find_max_perimeter_contour, preprocess_image
 
 
 class ThreadedCamera(object):

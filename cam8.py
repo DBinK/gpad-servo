@@ -209,7 +209,7 @@ if __name__ == "__main__":
     print("开始")
     #img = cv2.imread("img/rg.jpg")
     
-    img = cv2.imread("../img/n.png")
+    img = cv2.imread("img/rg.png")
     contours = preprocess_image(img)
 
     if contours is not None:
