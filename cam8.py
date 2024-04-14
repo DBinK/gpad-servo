@@ -80,9 +80,9 @@ def preprocess_image(img):
 
     # 增加对比度（直方图均衡化）
     #blur = cv2.convertScaleAbs(blur, alpha=0.5, beta=-50)
-    blur = cv2.convertScaleAbs(blur, alpha=1, beta=-120)
+    #blur = cv2.convertScaleAbs(blur, alpha=1, beta=-120)
 
-    #_, threshold = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    #_, blur = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     #_, threshold = cv2.threshold(blur, 157, 255, cv2.THRESH_BINARY) # 二值化
     #edges = cv2.Canny(threshold, 10, 200)  # 使用Canny算子进行边缘检测
     edges = cv2.Canny(blur, 50, 200)
