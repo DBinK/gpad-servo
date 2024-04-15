@@ -19,8 +19,8 @@ def find_largest_blob(image, color):
     - 如果找到最大的Blob，则返回一个列表，包含颜色、Blob的x和y坐标。
     - 如果没有找到指定颜色的Blob，则返回None。
     """
-    image = cv2.GaussianBlur(image, (15, 15), 0)
-    cv2.imshow("image", image)
+    #image = cv2.GaussianBlur(image, (15, 15), 0)
+    #cv2.imshow("image", image)
 
     # 转换颜色空间为HSV
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -38,8 +38,8 @@ def find_largest_blob(image, color):
         # 合并红色范围的掩码
         mask = mask1 + mask2
     elif color == 'green':
-        # 绿色范围 122, 220, 241
-        lower = np.array([220, 122, 241])
+        # 绿色范围
+        lower = np.array([40, 100, 100])
         upper = np.array([80, 255, 255])
         mask = cv2.inRange(hsv, lower, upper)
     else:
@@ -61,7 +61,7 @@ def find_largest_blob(image, color):
         text = f"{color} point: ({x}, {y})"
         cv2.putText(image, text, (x + w + 10, y + int(h / 2)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
 
-        return [x,y]
+        return image, [x, y]
     else:
         return None
     
@@ -70,9 +70,9 @@ if __name__ == '__main__':
 
 
     try:    
-        image = cv2.imread("img/rg.png")
+        image = cv2.imread("img/rgb.jpg")
         vertices = np.array([[150, 28], [179, 533], [625, 481], [610, 36]])
-        image = roi_cut(image, vertices)
+        #image = roi_cut(image, vertices)
         
 
         """ cv2.imshow('Result', image)

@@ -7,6 +7,7 @@ import keyboard
 from threading import Thread
 
 from cam8 import draw_contour_and_vertices, find_max_perimeter_contour, preprocess_image
+import rag2
 
 
 class ThreadedCamera(object):
@@ -71,7 +72,9 @@ class ThreadedCamera(object):
         #cv2.resizeWindow('Processed Stream', 800, 600)
 
         cv2.imshow('Original MJPEG Stream', self.frame)
-        processed_frame = self.process_frame_outside(self.frame)  #!记得改这里
+        
+        processed_frame , _ = rag2.find_largest_blob(self.frame.copy(), 'red') 
+        #processed_frame = self.process_frame_outside(self.frame)  #!记得改这里
         if processed_frame is not None:
             cv2.imshow('Processed Stream', processed_frame)
         cv2.waitKey(self.FPS_MS)
