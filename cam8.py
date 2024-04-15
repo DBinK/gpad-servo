@@ -133,6 +133,46 @@ def roi_cut(image, vertices):
 
     return masked_image
 
+def find_point(image):
+
+    # 转换颜色空间为HSV
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+    # 红色范围
+    lower = np.array([0, 100, 100])
+    upper = np.array([10, 255, 255])
+    mask1 = cv2.inRange(hsv, lower, upper)
+
+    lower = np.array([160, 100, 100])
+    upper = np.array([179, 255, 255])
+    mask2 = cv2.inRange(hsv, lower, upper)
+
+    # 合并红色范围的掩码
+    mask = mask1 | mask2
+
+    # 找到轮廓
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    if len(contours) > 0:
+        # 找到最大的轮廓
+        largest_contour = max(contours, key=cv2.contourArea)
+        # 找到最大轮廓的外接矩形
+        x, y, w, h = cv2.boundingRect(largest_contour)
+        return x, y, w, h
+    else:
+        return 0,0,0,0
+
+def draw_point(image, x, y, w, h):
+    # 在图像上绘制方框
+    cv2.rectangle(image, (x, y), (x + w, y + h), ( 0, 255, 255), 2)
+
+    # 绘制坐标
+    text = f"red point: ({x}, {y})"
+    cv2.putText(image, text, (x + 10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+
+    return image
+
+
 def draw_contour_and_vertices(img: cv2.Mat, vertices: List[List[int]], scale: float) -> cv2.Mat:
     """
     在图像上绘制四边形的轮廓、顶点、对角线、交点，并等比缩小重新绘制。
