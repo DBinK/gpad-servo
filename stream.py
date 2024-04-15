@@ -46,8 +46,8 @@ class ThreadedCamera(object):
         if vertices is not None:
             print(f"四个顶点坐标:\n {vertices}")
 
-            #roi_frame = roi_cut(frame, vertices)
-            red_point,green_point = find_point(frame)
+            roi_frame = roi_cut(frame, vertices)
+            red_point,green_point = find_point(roi_frame)
 
             if red_point[0] != 0:
                 processed_frame = draw_point(processed_frame,red_point)
