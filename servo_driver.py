@@ -23,7 +23,7 @@ class ServoController:
         duty_cycle = high_time / 20000 * 0xFFFF
         return int(duty_cycle), high_time
 
-    def rotate(self, channel: int, angle: float):
+    def rotate_angle(self, channel: int, angle: float):
         """
         控制指定通道的旋转。
         """
@@ -35,6 +35,9 @@ class ServoController:
         """
         self.pca.channels[channel].duty_cycle = int(brightness / 100 * 0xFFFF)
 
+    def motion(self, channel, speed):
+        
+        rotate_angle(channel, )
 
     def test_servo(self, max_angle=1350, min_angle=450, step=5, speed=0.01):
         """
@@ -42,14 +45,14 @@ class ServoController:
         """
         while True:
             for i in range(min_angle, max_angle, step):
-                self.rotate(0, i / 10)
+                self.rotate_angle(0, i / 10)
                 print(i)
                 time.sleep(speed)
 
             time.sleep(1)
 
             for i in range(max_angle, min_angle, -step):
-                self.rotate(0, i / 10)
+                self.rotate_angle(0, i / 10)
                 print(i)
                 time.sleep(speed)
 
