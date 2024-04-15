@@ -6,7 +6,7 @@ import time
 import keyboard
 from threading import Thread
 
-from cam8 import draw_contour_and_vertices, find_max_perimeter_contour, preprocess_image
+from cam8 import roi_cut, draw_point, find_point, draw_contour_and_vertices, find_max_perimeter_contour, preprocess_image
 import rag2
 
 
@@ -45,6 +45,16 @@ class ThreadedCamera(object):
 
         if vertices is not None:
             print(f"四个顶点坐标:\n {vertices}")
+
+            #roi_frame = roi_cut(frame, vertices)
+            red_point,green_point = find_point(frame)
+
+            if red_point[0] != 0:
+                processed_frame = draw_point(processed_frame,red_point)
+                
+            if green_point[0] != 0:
+                processed_frame = draw_point(processed_frame,green_point)
+
             processed_frame = draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
 
         return processed_frame
@@ -72,9 +82,9 @@ class ThreadedCamera(object):
         #cv2.resizeWindow('Processed Stream', 800, 600)
 
         cv2.imshow('Original MJPEG Stream', self.frame)
+
         
-        
-        processed_frame = self.process_frame_outside(processed_frame)  #!记得改这里
+        processed_frame = self.process_frame_outside(self.frame)  #!记得改这里
         #processed_frame = self.process_frame_outside(self.frame)  #!记得改这里
         if processed_frame is not None:
             cv2.imshow('Processed Stream', processed_frame)
