@@ -36,7 +36,7 @@ def find_largest_blob(image, color):
         mask2 = cv2.inRange(hsv, lower, upper)
 
         # 合并红色范围的掩码
-        mask = mask1 + mask2
+        mask = mask1 | mask2
     elif color == 'green':
         # 绿色范围
         lower = np.array([40, 100, 100])

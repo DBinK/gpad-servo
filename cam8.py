@@ -126,6 +126,13 @@ def find_max_perimeter_contour(contours, max_allowed_perimeter, min_allowed_peri
     else:
         return vertices
 
+def roi_cut(image, vertices):
+    mask = np.zeros_like(image)
+    cv2.fillPoly(mask, [vertices], (255, 255, 255))
+    masked_image = cv2.bitwise_and(image, mask)
+
+    return masked_image
+
 def draw_contour_and_vertices(img: cv2.Mat, vertices: List[List[int]], scale: float) -> cv2.Mat:
     """
     在图像上绘制四边形的轮廓、顶点、对角线、交点，并等比缩小重新绘制。

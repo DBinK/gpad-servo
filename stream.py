@@ -74,6 +74,7 @@ class ThreadedCamera(object):
         cv2.imshow('Original MJPEG Stream', self.frame)
         
         processed_frame , _ = rag2.find_largest_blob(self.frame.copy(), 'red') 
+        processed_frame = self.process_frame_outside(processed_frame)  #!记得改这里
         #processed_frame = self.process_frame_outside(self.frame)  #!记得改这里
         if processed_frame is not None:
             cv2.imshow('Processed Stream', processed_frame)
@@ -136,8 +137,9 @@ if __name__ == '__main__':
         app.run(host='0.0.0.0', debug=True)
     else:
         # 320x240 640x480 960x720 1280x720 1920x1080
-        # url = 'http://192.168.100.4:4747/video?960x720'
-        url = 3 # 使用本地摄像头
+        #url = 'http://192.168.100.4:4747/video?960x720'
+        # url = 3 # 使用本地摄像头
+        url = 'http://192.168.100.4:8080/video/mjpeg'
 
         threaded_camera = ThreadedCamera(url)
 
