@@ -1,6 +1,6 @@
 
 import cv2
-import cam8
+import cam
 
 url = 'rtsp://192.168.100.4:8080/video/h264'
 # 打开RTSP流
@@ -10,10 +10,10 @@ while True:
     # 读取每一帧图像
     ret, frame = vcap.read()
 
-    red_point,green_point = cam8.find_point(frame)
+    red_point,green_point = cam.find_point(frame)
 
     if red_point[0] != 0:
-        frame = cam8.draw_point(frame,red_point)
+        frame = cam.draw_point(frame, red_point)
 
     if green_point[0] != 0:
         frame = cam8.draw_point(frame,green_point)
