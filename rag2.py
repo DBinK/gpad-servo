@@ -101,7 +101,7 @@ def find_point(image):
 
     red_point = find_red_point(hsv)
     green_point = find_green_point(hsv)
-    
+
     return red_point, green_point
 def draw_point(image, point):
 
@@ -110,7 +110,7 @@ def draw_point(image, point):
     cv2.rectangle(image, (x, y), (x + w, y + h), ( 0, 255, 255), 1)
 
     # 绘制坐标
-    text = f"red point: ({x}, {y})"
+    text = f"point: ({x}, {y})"
     cv2.putText(image, text, (x + 10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
 
     return image
