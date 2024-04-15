@@ -26,11 +26,11 @@ if __name__ == '__main__':
         dx = r_x - x
         dy = r_y - y
 
-        # 计算新的跟踪点坐标
+        # 计算新的跟踪点坐标(PD算法)
         new_x = int(x + dx*0.2)
         new_y = int(y + dy*0.2)
 
-        track_point = [new_x, new_x, 30, 30]
+        track_point = [new_x, new_y, 30, 30]
 
         # 绘制跟踪点
         frame = cam.draw_point(frame, track_point)
