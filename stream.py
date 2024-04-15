@@ -6,8 +6,7 @@ import time
 import keyboard
 from threading import Thread
 
-from cam8 import roi_cut, draw_point, find_point, draw_contour_and_vertices, find_max_perimeter_contour, preprocess_image
-import rag2
+from cam8 import pre_cut, roi_cut, draw_point, find_point, draw_contour_and_vertices, find_max_perimeter_contour, preprocess_image
 
 
 class ThreadedCamera(object):
@@ -38,6 +37,8 @@ class ThreadedCamera(object):
         global vertices
         processed_frame = frame.copy()
 
+        processed_frame = pre_cut(processed_frame)
+
         # 在这里添加OpenCV处理代码
         contours = preprocess_image(processed_frame)
         if contours is not None:
@@ -46,7 +47,7 @@ class ThreadedCamera(object):
         if vertices is not None:
             print(f"四个顶点坐标:\n {vertices}")
 
-            roi_frame = roi_cut(frame, vertices)
+            roi_frame = roi_cut(processed_frame, vertices)
             red_point,green_point = find_point(roi_frame)
 
             if red_point[0] != 0:

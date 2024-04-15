@@ -57,7 +57,16 @@ def shrink_rectangle(vertices, center_x, center_y, multiple):
 
     return np.array(new_vertices, dtype=np.int32)
 
+
+def pre_cut(image):
+    # 指定裁剪区域的坐标和尺寸
+    x = 162  # 左上角x坐标
+    y = 20  # 左上角y坐标
+    w = 854  # 宽度
+    h = 480  # 高度
+    return image[y:y+h, x:x+w]
 def preprocess_image(img):
+
     """
     对输入图像进行预处理，包括灰度转换、高斯模糊、Canny边缘检测，并返回其中的轮廓信息。
     """
