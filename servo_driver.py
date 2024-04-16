@@ -17,18 +17,20 @@ class ServoController:
         """
         将角度转换为 PCA9685 的 duty_cycle 值。
         """
-        if angle < 0: 
-            angle = 0
-        if angle > 360:
-            angle = 360
+
         high_time = angle / 180 * 2000 + 500
         duty_cycle = high_time / 20000 * 0xFFFF
         return int(duty_cycle), high_time
 
-    def rotate_angle(self, channel: int, angle: float):
+    def rotate_angle(self, channel: int, angle: float, limit = [0 ,360]):
         """
         控制指定通道旋转到特定角度。
         """
+        if angle <= limit[0]: 
+            angle = limit[0]
+        if angle >= limit[1]:
+            angle = limit[1]
+                
         self.pca.channels[channel].duty_cycle, _ = self.angle_process(angle)
 
     def led(self, channel: int, brightness: int):
@@ -46,6 +48,7 @@ class ServoController:
         while True:
             for i in range(min_angle, max_angle, step):
                 self.rotate_angle(0, i / 10)
+                self.rotate_angle(3, i / 10)
                 print(i)
                 time.sleep(speed)
 
@@ -53,6 +56,7 @@ class ServoController:
 
             for i in range(max_angle, min_angle, -step):
                 self.rotate_angle(0, i / 10)
+                self.rotate_angle(3, i / 10)
                 print(i)
                 time.sleep(speed)
 

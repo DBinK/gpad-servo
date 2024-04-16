@@ -60,7 +60,7 @@ class ThreadedCamera(object):
 
             processed_frame = draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
 
-            x ,y = vertices[0][0] 
+            x ,y = vertices[0] #第一个角点
             angle_x, angle_y = 90 ,90
 
             if x:
@@ -71,8 +71,8 @@ class ThreadedCamera(object):
                     angle_x += dx * 0.01
                     angle_y += dy * 0.01
 
-                    servo.rotate_angle(0, servo.angle_process(angle_y))
-                    servo.rotate_angle(1, servo.angle_process(angle_y))
+                    servo.rotate_angle(0, angle_x)
+                    servo.rotate_angle(3, angle_y)
 
                 except Exception as e:
                     print(f"无法启动舵机跟踪: {e}")
