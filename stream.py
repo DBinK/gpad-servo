@@ -60,7 +60,7 @@ class ThreadedCamera(object):
 
             processed_frame = draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
 
-            x ,y = vertices[0][0] 
+            x ,y = 0,0 #vertices[0][0] 
             angle_x, angle_y = 90 ,90
 
             if x:
