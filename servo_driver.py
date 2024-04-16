@@ -102,5 +102,5 @@ class ServoController:
 
 if __name__ == '__main__':
     controller = ServoController()
-    controller.test_led()
+    #controller.test_led()
     controller.test_servo()
