@@ -1,25 +1,33 @@
 import cv2
 import cam
-from time import sleep
+import time
 
-url = 3
-
+URL = 0
 TRACK_SIZE = 30
-SLEEP_DURATION = 0.2
+SLEEP_DURATION_SEC = 0.0333333
+
+kp = 0.1  # 比例增益
+kd = 0.0  # 微分增益
 
 def main():
     # 初始化摄像头
-    vcap = cv2.VideoCapture(url)
-    if not vcap.isOpened():
+    cap = cv2.VideoCapture(URL)
+    if not cap.isOpened():
         raise RuntimeError("Failed to open video capture device.")
 
     try:
-        x, y = 100, 100
-        track = True
+        target_x, target_y = 100, 100
+        track_point = [target_x, target_y, TRACK_SIZE, TRACK_SIZE]
+
+        tracking_enabled = True
 
         while True:
             # 读取每一帧图像
-            ret, frame = vcap.read()
+            ret, frame = cap.read()
+
+            if URL == 0:
+                frame = cv2.flip(frame, 1)
+
             if not ret:
                 print("Failed to read a frame from the video capture device.")
                 continue
@@ -28,15 +36,20 @@ def main():
 
             if red_point[0] != 0:
                 frame = cam.draw_point(frame, red_point)
-            
-            if track:
-                r_x, r_y = red_point[0], red_point[1]
-                dx = r_x - x
-                dy = r_y - y
-                x = int(x + dx * 0.2)
-                y = int(y + dy * 0.2)
-                track_point = [x, y, TRACK_SIZE, TRACK_SIZE]
-                frame = cam.draw_point(frame, track_point)
+
+                if tracking_enabled:
+                    tracked_x, tracked_y = red_point[0], red_point[1]
+                    dx = tracked_x - target_x
+                    dy = tracked_y - target_y
+                    target_x += int(dx * kp + dx * kd)
+                    target_y += int(dy * kp + dy * kd)
+                    track_point = [target_x, target_y, TRACK_SIZE, TRACK_SIZE]
+
+                    # 到达指定误差范围后，停止追踪
+                    if abs(dx) < 5 and abs(dy) < 5:
+                        tracking_enabled = False
+
+            frame = cam.draw_point(frame, track_point, bgr = (255, 0, 0))
 
             # 显示图像
             cv2.imshow('VIDEO', frame)
@@ -44,18 +57,18 @@ def main():
             # 处理键盘事件
             key = cv2.waitKey(1) & 0xFF
             if key == ord('t'):
-                track = not track
-            if key == ord('q'):
+                tracking_enabled = not tracking_enabled
+            elif key == ord('q'):
                 break
 
-            sleep(SLEEP_DURATION)
+            time.sleep(SLEEP_DURATION_SEC)
 
     except Exception as e:
         print(f"An error occurred: {e}")
 
     finally:
         # 释放资源并关闭窗口
-        vcap.release()
+        cap.release()
         cv2.destroyAllWindows()
 
 if __name__ == '__main__':

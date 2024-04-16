@@ -2,7 +2,7 @@ from time import sleep
 import cv2
 import cam
 
-url = 3
+url = 0
 vcap = cv2.VideoCapture(url)
 
 x, y = 100, 100
@@ -21,10 +21,13 @@ if __name__ == '__main__':
     while True:
         ret, frame = vcap.read()
 
+        if url == 0:
+            frame = cv2.flip(frame, 1)
+
         red_point, green_point = cam.find_point(frame)
 
         if red_point[0] != 0:
-            frame = cam.draw_point(frame, red_point)
+            frame = cam.draw_point(frame, red_point, color = 'track')
 
         if track:
             r_x, r_y = red_point[0], red_point[1]
@@ -63,7 +66,7 @@ if __name__ == '__main__':
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-        sleep(0.02)
+        sleep(0.0333333)
 
 vcap.release()
 cv2.destroyAllWindows()

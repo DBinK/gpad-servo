@@ -182,15 +182,15 @@ def find_point(image):
     green_point = find_green_point(hsv)
 
     return red_point, green_point
-def draw_point(image, point):
+def draw_point(image, point, bgr = ( 0, 255, 255) , color = ''):
 
     [x, y, w, h] = point
     # 在图像上绘制方框
-    cv2.rectangle(image, (x, y), (x + w, y + h), ( 0, 255, 255), 1)
+    cv2.rectangle(image, (x, y), (x + w, y + h), bgr, 1)
 
     # 绘制坐标
-    text = f"point: ({x}, {y})"
-    cv2.putText(image, text, (x + 10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 255), 1)
+    text = f"{color}point: ({x}, {y})"
+    cv2.putText(image, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, bgr, 1)
 
     return image
 
@@ -278,15 +278,24 @@ if __name__ == "__main__":
     print("开始")
     #img = cv2.imread("img/rg.jpg")
     
-    img = cv2.imread("img/rg.png")
+    img = cv2.imread("img/rgb.jpg")
     contours = preprocess_image(img)
 
     if contours is not None:
         vertices = find_max_perimeter_contour(contours, 10090*4, 200*4)
-        img = draw_contour_and_vertices(img, vertices, (276 / 297)) # (0.5/0.6)
+        
 
     if vertices is not None:
+
         print(f"四个顶点坐标: {vertices}")
+        roi_img = roi_cut(img, vertices)
+        red_point, green_point = find_point(roi_img)
+        if red_point is not None:
+            draw_point(img, red_point, color = 'red ')
+        if green_point is not None:
+            draw_point(img, green_point, color = 'green ')
+
+        img = draw_contour_and_vertices(img, vertices, (276 / 297)) # (0.5/0.6)  
 
     # 显示的图像
     cv2.imshow("final", img)
