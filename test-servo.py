@@ -1,6 +1,11 @@
 import cv2
-import cam
 import time
+
+from numpy import angle
+import cam
+import servo_driver
+
+servo = servo_driver.ServoController()
 
 #URL = 0
 URL = 'http://192.168.100.4:8080/video/mjpeg'
@@ -63,6 +68,8 @@ def main():
                 tracking_enabled = not tracking_enabled
             elif key == ord('q'):
                 break
+            elif key == ord('a'):
+                servo.rotate_angle(0, angle)
 
             time.sleep(SLEEP_DURATION_SEC)
 
