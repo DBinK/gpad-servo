@@ -26,9 +26,10 @@ class ServoController:
         """
         控制指定通道旋转到特定角度。
         """
-        if angle <= limit[0]: 
+        if angle < limit[0]: 
             angle = limit[0]
-        if angle >= limit[1]:
+            
+        if angle > limit[1]:
             angle = limit[1]
                 
         self.pca.channels[channel].duty_cycle, _ = self.angle_process(angle)

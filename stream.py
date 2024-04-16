@@ -7,6 +7,7 @@ import keyboard
 from threading import Thread
 
 import servo_driver
+import cam
 from cam import pre_cut, roi_cut, draw_point, find_point, draw_contour_and_vertices, find_max_perimeter_contour, preprocess_image
 
 servo = servo_driver.ServoController()
@@ -55,25 +56,37 @@ class ThreadedCamera(object):
 
             if red_point[0] != 0:
                 processed_frame = draw_point(processed_frame,red_point)
+            else:
+                red_point = [-1,-1]
                 
             if green_point[0] != 0:
                 processed_frame = draw_point(processed_frame,green_point)
+            else:
+                green_point = [-1,-1]    
 
             processed_frame = draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
+        
 
-            x ,y = vertices[0] #第一个角点
+            x ,y = cam.calculate_intersection(vertices)
+            #x ,y = vertices[1] #第一个角点
 
-            
-
-            if x != 0:
+            if x != 0 and red_point != [-1,-1]:
                 try: # 启动 PD 控制算法
+                    limit = [75, 105]
+
                     dx = x - red_point[0]
                     dy = y - red_point[1]
                     
-                    angle_x += dx * 0.01
-                    angle_y += dy * 0.01
+                    angle_x = angle_x - (dx * 0.005)
+                    angle_y = angle_y + (dy * 0.005) #这里取正负方向
 
-                    print(f"{angle_x}{angle_y}")
+                    if angle_x < limit[0]: 
+                        angle_x = limit[0]
+                        
+                    if angle_y > limit[1]:
+                        angle_y = limit[1]
+
+                    print(f"{angle_x}, {angle_y}")
 
                     servo.rotate_angle(0, angle_x)
                     servo.rotate_angle(3, angle_y)
@@ -169,6 +182,8 @@ if __name__ == '__main__':
     # 创建一个线程来监听控制台按键输入
     #key_thread = Thread(target=key_listener)
     #key_thread.start()
+
+    servo.reset()
     
     if platform.system() == 'Linux':
         app.run(host='0.0.0.0', debug=True)
