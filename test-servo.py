@@ -2,9 +2,11 @@ import cv2
 import cam
 import time
 
-URL = 0
+#URL = 0
+URL = 'http://192.168.100.4:8080/video/mjpeg'
 TRACK_SIZE = 30
 SLEEP_DURATION_SEC = 0.02
+
 
 kp = 0.1  # 比例增益
 kd = 0.0  # 微分增益

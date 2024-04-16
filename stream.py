@@ -6,8 +6,10 @@ import time
 import keyboard
 from threading import Thread
 
+import servo_driver
 from cam import pre_cut, roi_cut, draw_point, find_point, draw_contour_and_vertices, find_max_perimeter_contour, preprocess_image
 
+servo = servo_driver.ServoController
 
 class ThreadedCamera(object):
     def __init__(self, url):
@@ -58,6 +60,20 @@ class ThreadedCamera(object):
 
             processed_frame = draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
 
+            x ,y = vertices[0][0] 
+            angle_x, angle_y = 90 ,90
+
+            if x:
+                # 启动 PD 控制算法
+                dx = x - red_point[0]
+                dy = y - red_point[1]
+                
+                angle_x += dx * 0.01
+                angle_y += dy * 0.01
+
+                servo.rotate_angle(0, servo.angle_process(angle_y))
+                servo.rotate_angle(1, servo.angle_process(angle_y))
+
         return processed_frame
     
     def process_frame_inside(self, frame):
@@ -90,6 +106,7 @@ class ThreadedCamera(object):
         if processed_frame is not None:
             cv2.imshow('Processed Stream', processed_frame)
         cv2.waitKey(self.FPS_MS)
+        
 
 def generate_frames():     # 远程调试显示用
     # 320x240 640x480 960x720 1280x720 1920x1080
