@@ -1,12 +1,9 @@
 # !/usr/bin/fish
-sudo su
 
-cd /home/pi/gpad-servo
-
-fish
+cd /home/pi//gpad-servo
 
 source .venv/bin/activate.fish
 
 git pull
 
-python stream.py
+sudo ./.venv/bin/python stream.py

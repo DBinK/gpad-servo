@@ -11,7 +11,13 @@ import cam
 from cam import pre_cut, roi_cut, draw_point, find_point, draw_contour_and_vertices, find_max_perimeter_contour, preprocess_image
 
 servo = servo_driver.ServoController()
+
 angle_x, angle_y = 90 ,90
+kd = 0.02
+
+servo_on = 1
+speed = 0.3
+
 
 class ThreadedCamera(object):
     def __init__(self, url):
@@ -38,7 +44,7 @@ class ThreadedCamera(object):
 
     def process_frame_outside(self, frame):
         # 创建一个副本来存储处理后的帧
-        global vertices, angle_x, angle_y
+        global vertices, angle_x, angle_y, speed
         processed_frame = frame.copy()
 
         processed_frame = pre_cut(processed_frame)
@@ -82,8 +88,8 @@ class ThreadedCamera(object):
 
                     if abs(dx) > 5 or abs(dy) > 5:
 
-                        angle_x = angle_x - (dx * 0.02)
-                        angle_y = angle_y + (dy * 0.02) #这里取正负方向
+                        angle_x = angle_x - (dx * kd)
+                        angle_y = angle_y + (dy * kd) #这里取正负方向
 
                         if angle_x < limit[0]: 
                             angle_x = limit[0]
@@ -167,18 +173,52 @@ def video_feed():
 
 # 定义按键监听函数
 def key_listener():
-    def release(event):
+    def on_press(event):
+        global servo_on, angle_y, angle_x, speed
         print(event.name)
-        if event.event_type == keyboard.KEY_UP:
+        if event.event_type == keyboard.KEY_DOWN:
             #time.sleep(0.5)   # 消除抖动
-            if event.name == 'q':
-                print("q is pressed")
+            if event.name == 'space':
+                if servo_on:
+                    servo.release()
+                    servo_on = 0
+                    print(f"暂停控制")
+                else:
+                    servo.restore()
+                    servo_on = 1
+                    print(f"恢复控制")
+
+            elif event.name == 'a':
+                angle_x += speed
+                servo.rotate_angle(0, angle_x) 
+                print(f"{angle_x} <-")
+
+            elif event.name == 'd':
+                
+                angle_x -= speed
+                servo.rotate_angle(0, angle_x)
+                print(f"{angle_x} ->")
+
             elif event.name == 'w':
-                print("w is pressed")
-            elif event.name == 'e':
-                print("e is pressed")
+                
+                angle_y -= speed
+                servo.rotate_angle(3, angle_y) 
+                print(f"{angle_y} A")
+
+            elif event.name == 's':
+                
+                angle_y += speed
+                servo.rotate_angle(3, angle_y) 
+                print(f"{angle_y} V")
+
+            elif event.name == 'r':
+                servo.reset()
+                angle_y = 90
+                angle_x = 90
+
+                print(f"重置位置")
     
-    keyboard.on_release(release)  # 注册按键监听器
+    keyboard.on_press(on_press)  # 注册按键监听器
     keyboard.wait()  # 保持监听状态
 
 if __name__ == '__main__':
