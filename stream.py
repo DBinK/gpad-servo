@@ -72,24 +72,27 @@ class ThreadedCamera(object):
 
             if x != 0 and red_point != [-1,-1]:
                 try: # 启动 PD 控制算法
-                    limit = [75, 105]
+                    limit = [60, 120]
 
                     dx = x - red_point[0]
                     dy = y - red_point[1]
-                    
-                    angle_x = angle_x - (dx * 0.005)
-                    angle_y = angle_y + (dy * 0.005) #这里取正负方向
 
-                    if angle_x < limit[0]: 
-                        angle_x = limit[0]
-                        
-                    if angle_y > limit[1]:
-                        angle_y = limit[1]
-
+                    print(f"dx: {dx}, dy: {dy}")
                     print(f"{angle_x}, {angle_y}")
 
-                    servo.rotate_angle(0, angle_x)
-                    servo.rotate_angle(3, angle_y)
+                    if abs(dx) > 5 or abs(dy) > 5:
+
+                        angle_x = angle_x - (dx * 0.02)
+                        angle_y = angle_y + (dy * 0.02) #这里取正负方向
+
+                        if angle_x < limit[0]: 
+                            angle_x = limit[0]
+                            
+                        if angle_y > limit[1]:
+                            angle_y = limit[1]
+                                        
+                        servo.rotate_angle(0, angle_x)
+                        servo.rotate_angle(3, angle_y)
 
                 except Exception as e:
                     print(f"无法启动舵机跟踪: {e}")
@@ -167,7 +170,7 @@ def key_listener():
     def release(event):
         print(event.name)
         if event.event_type == keyboard.KEY_UP:
-            time.sleep(0.5)   # 消除抖动
+            #time.sleep(0.5)   # 消除抖动
             if event.name == 'q':
                 print("q is pressed")
             elif event.name == 'w':
@@ -180,8 +183,8 @@ def key_listener():
 
 if __name__ == '__main__':
     # 创建一个线程来监听控制台按键输入
-    #key_thread = Thread(target=key_listener)
-    #key_thread.start()
+    key_thread = Thread(target=key_listener)
+    key_thread.start()
 
     servo.reset()
     
