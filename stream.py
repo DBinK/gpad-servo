@@ -63,7 +63,7 @@ class ThreadedCamera(object):
             x ,y = 0,0 #vertices[0][0] 
             angle_x, angle_y = 90 ,90
 
-            if x:
+            if x != 0:
                 try: # 启动 PD 控制算法
                     dx = x - red_point[0]
                     dy = y - red_point[1]
