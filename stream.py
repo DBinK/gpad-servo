@@ -60,7 +60,7 @@ class ThreadedCamera(object):
 
             processed_frame = draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
 
-            x ,y = vertices[0][0] 
+            """ x ,y = vertices[0][0] 
             angle_x, angle_y = 90 ,90
 
             if x:
@@ -72,7 +72,7 @@ class ThreadedCamera(object):
                 angle_y += dy * 0.01
 
                 servo.rotate_angle(0, servo.angle_process(angle_y))
-                servo.rotate_angle(1, servo.angle_process(angle_y))
+                servo.rotate_angle(1, servo.angle_process(angle_y)) """
 
         return processed_frame
     
@@ -119,8 +119,8 @@ def generate_frames():     # 远程调试显示用
         frame = stream.frame
         if frame is not None:
             try:
-                processed_frame = frame
-                #processed_frame = stream.process_frame_outside(frame)
+                #processed_frame = frame
+                processed_frame = stream.process_frame_outside(frame)
                 # 将处理后的帧编码为JPEG格式
                 _, jpeg_buffer = cv2.imencode('.jpg', processed_frame)
 
