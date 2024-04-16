@@ -16,14 +16,14 @@ while True:
         frame = cam.draw_point(frame, red_point)
 
     if green_point[0] != 0:
-        frame = cam8.draw_point(frame,green_point)
+        frame = cam.draw_point(frame,green_point)
+
     # 显示图像
     cv2.imshow('VIDEO', frame)
 
     # 按键盘上的任意键退出
     if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
+        break 
 # 释放资源
 vcap.release()
 cv2.destroyAllWindows()

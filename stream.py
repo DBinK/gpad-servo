@@ -9,7 +9,8 @@ from threading import Thread
 import servo_driver
 from cam import pre_cut, roi_cut, draw_point, find_point, draw_contour_and_vertices, find_max_perimeter_contour, preprocess_image
 
-servo = servo_driver.ServoController
+servo = servo_driver.ServoController()
+angle_x, angle_y = 90 ,90
 
 class ThreadedCamera(object):
     def __init__(self, url):
@@ -36,7 +37,7 @@ class ThreadedCamera(object):
 
     def process_frame_outside(self, frame):
         # 创建一个副本来存储处理后的帧
-        global vertices
+        global vertices, angle_x, angle_y
         processed_frame = frame.copy()
 
         processed_frame = pre_cut(processed_frame)
@@ -61,7 +62,8 @@ class ThreadedCamera(object):
             processed_frame = draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
 
             x ,y = vertices[0] #第一个角点
-            angle_x, angle_y = 90 ,90
+
+            
 
             if x != 0:
                 try: # 启动 PD 控制算法
@@ -70,6 +72,8 @@ class ThreadedCamera(object):
                     
                     angle_x += dx * 0.01
                     angle_y += dy * 0.01
+
+                    print(f"{angle_x}{angle_y}")
 
                     servo.rotate_angle(0, angle_x)
                     servo.rotate_angle(3, angle_y)

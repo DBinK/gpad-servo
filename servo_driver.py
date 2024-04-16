@@ -39,6 +39,22 @@ class ServoController:
         """
         self.pca.channels[channel].duty_cycle = int(brightness / 100 * 0xFFFF)
 
+    def release(self):
+        """
+        停止PCA9685输出信号并释放资源。
+        """
+        self.pca.deinit()
+
+    def restore(self):
+        """
+        恢复对PCA9685的控制。
+        """
+        self.pca = PCA9685(self.i2c)
+        self.pca.frequency = 50  # 恢复 PWM 频率设置为 50Hz
+
+    def reset(self):
+        for i in range(0,15):
+            self.rotate_angle(i, 90)
 
 
     def test_servo(self, max_angle=1350, min_angle=450, step=5, speed=0.01):
