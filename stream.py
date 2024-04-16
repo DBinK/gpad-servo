@@ -119,7 +119,8 @@ def generate_frames():     # 远程调试显示用
         frame = stream.frame
         if frame is not None:
             try:
-                processed_frame = stream.process_frame_outside(frame)
+                processed_frame = frame
+                #processed_frame = stream.process_frame_outside(frame)
                 # 将处理后的帧编码为JPEG格式
                 _, jpeg_buffer = cv2.imencode('.jpg', processed_frame)
 
