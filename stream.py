@@ -80,8 +80,8 @@ class ThreadedCamera(object):
                 try: # 启动 PD 控制算法
                     limit = [60, 120]
 
-                    dx = x - red_point[0]
-                    dy = y - red_point[1]
+                    dx = x - red_point[4]
+                    dy = y - red_point[5]
 
                     print(f"dx: {dx}, dy: {dy}")
                     print(f"{angle_x}, {angle_y}")

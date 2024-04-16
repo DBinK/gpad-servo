@@ -152,12 +152,17 @@ def find_point(image):
             # 找到最大的轮廓
             largest_contour = max(contours, key=cv2.contourArea)
             # 找到最大轮廓的外接矩形
-            x, y, w, h = cv2.boundingRect(largest_contour)
-            point = [x, y, w, h]
+            x, y, w, h = cv2.boundingRect(largest_contour)  
+            
+            center_x = x + w / 2  # 计算中心点 x 坐标
+            center_y = y + h / 2  # 计算中心点 y 坐标
+
+            point = [x, y, w, h, center_x, center_y]
             print(point)
             return point
         else:
-            return [0,0,0,0]
+            return [0,0,0,0,0,0]
+        
     def find_red_point(hsv):
         lower = np.array([0, 100, 100])
         upper = np.array([10, 255, 255])
@@ -182,14 +187,15 @@ def find_point(image):
     green_point = find_green_point(hsv)
 
     return red_point, green_point
+
 def draw_point(image, point, bgr = ( 0, 255, 255) , color = ''):
 
-    [x, y, w, h] = point
+    [x, y, w, h, center_x, center_y] = point
     # 在图像上绘制方框
     cv2.rectangle(image, (x, y), (x + w, y + h), bgr, 1)
 
     # 绘制坐标
-    text = f"{color}point: ({x}, {y})"
+    text = f"{color}point: ({center_x}, {center_y})"
     cv2.putText(image, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, bgr, 1)
 
     return image
