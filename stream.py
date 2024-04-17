@@ -123,11 +123,11 @@ class ThreadedCamera(object):
                         time.sleep(0.5) 
                         track_done = 1
 
-                        if track_point < 4 and track_point != 0:
-                            track_point = track_point + 1
-
                         if track_point == 4 and track_done == 1:
                             track_point = 1
+
+                        if track_point < 4 and track_point != 0:
+                            track_point = track_point + 1
 
                         """ if track_point == 1 and track_done == 1:
                             track_swtich = 0 """
@@ -199,7 +199,7 @@ def key_listener():
                     print("恢复控制")
 
             if event.name == 'p':
-                if servo_on:
+                if track_swtich:
                     track_swtich = 0
                     print("暂停追踪")
                 else:
