@@ -141,7 +141,7 @@ def generate_frames():     # 远程调试显示用
     # 320x240 640x480 960x720 1280x720 1920x1080
     #url = 'http://192.168.100.44:4747/video?960x720'
     #url = 'rtsp://192.168.100.4:8080/video/h264'
-    url = 'http://192.168.100.4:8080/video/mjpeg'
+    url = 'http://192.168.226.252:8080/video/mjpeg'
     stream = ThreadedCamera(url)
 
     while True:
