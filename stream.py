@@ -126,7 +126,7 @@ class ThreadedCamera(object):
                         if track_point < 4 and track_point != 0:
                             track_point = track_point + 1
 
-                        if track_point == 4:
+                        if track_point == 4 and track_done == 1:
                             track_point = 1
 
                         """ if track_point == 1 and track_done == 1:
@@ -198,6 +198,14 @@ def key_listener():
                     servo_on = 1
                     print("恢复控制")
 
+            if event.name == 'p':
+                if servo_on:
+                    track_swtich = 0
+                    print("暂停追踪")
+                else:
+                    track_swtich = 1
+                    print("恢复追踪")
+
             elif event.name == 'a':
                 angle_x += ctrl_speed
                 servo.rotate_angle(0, angle_x) 
@@ -230,6 +238,7 @@ def key_listener():
 
             elif event.name == '0':
                 track_point = 0
+                track_swtich = 1
                 print("追踪中点")
             
             elif event.name == '1':
