@@ -18,6 +18,8 @@ kd = 0.02
 servo_on = 1
 speed = 0.3
 
+# 初始化追踪点, 中心点: 0 , 四个角点: 1, 2, 3, 4
+track_point = 0
 
 class ThreadedCamera(object):
     def __init__(self, url):
@@ -44,7 +46,7 @@ class ThreadedCamera(object):
 
     def process_frame_outside(self, frame):
         # 创建一个副本来存储处理后的帧
-        global vertices, angle_x, angle_y, speed
+        global vertices, angle_x, angle_y, speed, track_point
         processed_frame = frame.copy()
 
         processed_frame = pre_cut(processed_frame)
@@ -72,9 +74,21 @@ class ThreadedCamera(object):
 
             processed_frame = draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
         
+            if track_point == 0:
+                x ,y = cam.calculate_intersection(vertices)
 
-            x ,y = cam.calculate_intersection(vertices)
-            #x ,y = vertices[1] #第一个角点
+            elif track_point == 1:
+                x ,y = vertices[1] #第一个角点
+
+            elif track_point == 2:
+                x ,y = vertices[2] #第二个角点
+            
+            elif track_point == 3:
+                x ,y = vertices[3] #第二个角点
+
+            elif track_point == 4:
+                x ,y = vertices[0] #第二个角点
+
 
             if x != 0 and red_point != [-1,-1]:
                 try: # 启动 PD 控制算法
@@ -152,7 +166,7 @@ def video_feed():
 # 定义按键监听函数
 def key_listener():
     def on_press(event):
-        global servo_on, angle_y, angle_x, speed
+        global servo_on, angle_y, angle_x, speed, track_point
         print(event.name)
         if event.event_type == keyboard.KEY_DOWN:
             #time.sleep(0.5)   # 消除抖动
@@ -160,11 +174,11 @@ def key_listener():
                 if servo_on:
                     servo.release()
                     servo_on = 0
-                    print(f"暂停控制")
+                    print("暂停控制")
                 else:
                     servo.restore()
                     servo_on = 1
-                    print(f"恢复控制")
+                    print("恢复控制")
 
             elif event.name == 'a':
                 angle_x += speed
@@ -194,10 +208,32 @@ def key_listener():
                 angle_y = 90
                 angle_x = 90
 
-                print(f"重置位置")
+                print("重置位置")
+
+            elif event.name == '0':
+                track_point = 0
+                print("追踪中点")
+            
+            elif event.name == '1':
+                track_point = 1
+                print("追踪右上角")
+            
+            elif event.name == '2':
+                track_point = 2
+                print("追踪右下角")
+
+            elif event.name == '3':
+                track_point = 3
+                print("追踪左下角")
+
+            elif event.name == '4':
+                track_point = 4
+                print("追踪左上角")
+
     
     keyboard.on_press(on_press)  # 注册按键监听器
     keyboard.wait()  # 保持监听状态
+
 
 if __name__ == '__main__':
     # 创建一个线程来监听控制台按键输入
@@ -232,7 +268,7 @@ if __name__ == '__main__':
                         continue
 
         app.run(host='0.0.0.0', debug=True)
-        
+
     else:
         # 320x240 640x480 960x720 1280x720 1920x1080
         #url = 'http://192.168.100.4:4747/video?960x720'
