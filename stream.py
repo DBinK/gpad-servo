@@ -77,6 +77,8 @@ class ThreadedCamera(object):
 
             processed_frame, new_vertices = draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
 
+            new_vertices = sorted(new_vertices, reverse=True)
+
             print(new_vertices)
 
             if track_point == 0:
