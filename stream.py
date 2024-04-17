@@ -16,7 +16,7 @@ angle_x, angle_y = 90 ,90
 
 kp = 0
 ki = 0
-kd = 0.005
+kd = 0.05
 
 #prev_error_x, prev_error_y
 prev_error_x, prev_error_y = 0, 0
