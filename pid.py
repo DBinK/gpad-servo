@@ -30,7 +30,7 @@ if __name__ == '__main__':
             frame = cam.draw_point(frame, red_point, color = 'track')
 
         if track:
-            r_x, r_y = red_point[0], red_point[1]
+            r_x, r_y = red_point[4], red_point[5]
 
             # 计算当前误差
             error_x = r_x - x
@@ -52,7 +52,7 @@ if __name__ == '__main__':
             x = int(x + u_x)
             y = int(y + u_y)
 
-            track_point = [x, y, 30, 30]
+            track_point = [red_point[0], red_point[1], 30, 30, x, y]
             frame = cam.draw_point(frame, track_point)
 
             # 保存当前误差作为下一次微分误差计算的参考
