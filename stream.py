@@ -59,6 +59,8 @@ class ThreadedCamera(object):
     def process_frame_outside(self, frame):
         # 创建一个副本来存储处理后的帧
         global vertices, angle_x, angle_y, ctrl_speed, track_point, track_done, track_swtich
+        global ix, iy, prev_error_x, prev_error_y
+
         processed_frame = frame.copy()
 
         processed_frame = pre_cut(processed_frame)
