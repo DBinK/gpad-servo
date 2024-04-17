@@ -13,7 +13,7 @@ from cam import pre_cut, roi_cut, draw_point, find_point, draw_contour_and_verti
 servo = servo_driver.ServoController()
 
 angle_x, angle_y = 90 ,90
-kd = 0.02
+kd = 0.01
 
 servo_on = 1
 speed = 0.3
