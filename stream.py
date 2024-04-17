@@ -6,8 +6,6 @@ import time
 import keyboard
 from threading import Thread
 
-from pygame import K_p
-
 import servo_driver
 import cam
 from cam import pre_cut, roi_cut, draw_point, find_point, draw_contour_and_vertices, find_max_perimeter_contour, preprocess_image
