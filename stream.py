@@ -125,11 +125,12 @@ class ThreadedCamera(object):
 
                         if track_point < 4 and track_point != 0:
                             track_point = track_point + 1
+
                         if track_point == 4:
                             track_point = 1
 
-                        if track_point == 1 and track_done == 1:
-                            track_swtich = 0
+                        """ if track_point == 1 and track_done == 1:
+                            track_swtich = 0 """
 
                 except Exception as e:
                     print(f"无法启动舵机跟踪: {e}")
