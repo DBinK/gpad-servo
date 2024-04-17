@@ -6,6 +6,8 @@ import time
 import keyboard
 from threading import Thread
 
+from pygame import K_p
+
 import servo_driver
 import cam
 from cam import pre_cut, roi_cut, draw_point, find_point, draw_contour_and_vertices, find_max_perimeter_contour, preprocess_image
@@ -13,7 +15,14 @@ from cam import pre_cut, roi_cut, draw_point, find_point, draw_contour_and_verti
 servo = servo_driver.ServoController()
 
 angle_x, angle_y = 90 ,90
+
+kp = 0.01
+ki = 0.001
 kd = 0.005
+
+#prev_error_x, prev_error_y
+prev_error_x, prev_error_y = 0, 0
+ix, iy = 0, 0
 
 # 初始化键盘参数
 servo_on = 1
@@ -107,8 +116,17 @@ class ThreadedCamera(object):
                     if abs(dx) > 5 or abs(dy) > 5:
                         track_done = 0
 
-                        angle_x = angle_x - (dx * kd)
-                        angle_y = angle_y + (dy * kd) #这里取正负方向
+                        ix = ix + dx
+                        iy = iy + dy
+
+                        ddx = dx - prev_error_x
+                        ddy = dy - prev_error_y
+
+                        angle_x = angle_x - (kp*dx + ki*ix + kd * ddx)
+                        angle_y = angle_y + (kp*dy + ki*iy + kd * ddy) #这里取正负方向
+
+                        prev_error_x = dx
+                        prev_error_y = dy
 
                         if angle_x < limit[0]: 
                             angle_x = limit[0]
