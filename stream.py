@@ -20,7 +20,9 @@ servo_on = 1
 ctrl_speed = 0.3
 
 # 初始化追踪点, 中心点: 0 , 四个角点: 1, 2, 3, 4
-track_point = 0
+track_point  = 0
+track_done   = 0
+track_swtich = 0
 
 class ThreadedCamera(object):
     def __init__(self, url):
@@ -47,7 +49,7 @@ class ThreadedCamera(object):
 
     def process_frame_outside(self, frame):
         # 创建一个副本来存储处理后的帧
-        global vertices, angle_x, angle_y, ctrl_speed, track_point
+        global vertices, angle_x, angle_y, ctrl_speed, track_point, track_done, track_swtich
         processed_frame = frame.copy()
 
         processed_frame = pre_cut(processed_frame)
@@ -91,7 +93,7 @@ class ThreadedCamera(object):
                 x ,y = new_vertices[0] #第二个角点
 
 
-            if x != 0 and red_point != [-1,-1]:
+            if x != 0 and red_point != [-1,-1] and track_swtich:
                 try: # 启动 PD 控制算法
                     limit = [60, 120]
 
@@ -103,6 +105,7 @@ class ThreadedCamera(object):
                     print(f"{x}, {y} \n")
 
                     if abs(dx) > 5 or abs(dy) > 5:
+                        track_done = 0
 
                         angle_x = angle_x - (dx * kd)
                         angle_y = angle_y + (dy * kd) #这里取正负方向
@@ -118,8 +121,15 @@ class ThreadedCamera(object):
 
                     else:
                         time.sleep(0.5) 
-                        if track_point < 3 and track_point != 0:
+                        track_done = 1
+
+                        if track_point < 4 and track_point != 0:
                             track_point = track_point + 1
+                        if track_point == 4:
+                            track_point = 1
+
+                        if track_point == 1 and track_done == 1:
+                            track_swtich = 0
 
                 except Exception as e:
                     print(f"无法启动舵机跟踪: {e}")
@@ -173,7 +183,7 @@ def video_feed():
 # 定义按键监听函数
 def key_listener():
     def on_press(event):
-        global servo_on, angle_y, angle_x, ctrl_speed, track_point
+        global servo_on, angle_y, angle_x, ctrl_speed, track_point, track_swtich
         print(event.name)
         if event.event_type == keyboard.KEY_DOWN:
             #time.sleep(0.5)   # 消除抖动
@@ -223,6 +233,7 @@ def key_listener():
             
             elif event.name == '1':
                 track_point = 1
+                track_swtich = 1
                 print("追踪1号点")
             
             elif event.name == '2':
