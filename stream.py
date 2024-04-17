@@ -58,7 +58,7 @@ class ThreadedCamera(object):
             vertices = find_max_perimeter_contour(contours, 999999999, 100*4) # 最大,最小允许周长(mm)
 
         if vertices is not None:
-            print(f"四个顶点坐标:\n {vertices}")
+            #print(f"四个顶点坐标:\n {vertices}")
 
             roi_frame = roi_cut(processed_frame, vertices)
             red_point,green_point = find_point(roi_frame)
@@ -118,7 +118,7 @@ class ThreadedCamera(object):
 
                     else:
                         time.sleep(0.5) 
-                        if track_point < 3 or track_point != 0:
+                        if track_point < 3 and track_point != 0:
                             track_point = track_point + 1
 
                 except Exception as e:
