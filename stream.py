@@ -72,22 +72,22 @@ class ThreadedCamera(object):
             else:
                 green_point = [-1,-1]    
 
-            processed_frame = draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
-        
+            processed_frame, new_vertices = draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
+
             if track_point == 0:
                 x ,y = cam.calculate_intersection(vertices)
 
             elif track_point == 1:
-                x ,y = vertices[1] #第一个角点
+                x ,y = new_vertices[1] #第一个角点
 
             elif track_point == 2:
-                x ,y = vertices[2] #第二个角点
+                x ,y = new_vertices[2] #第二个角点
             
             elif track_point == 3:
-                x ,y = vertices[3] #第二个角点
+                x ,y = new_vertices[3] #第二个角点
 
             elif track_point == 4:
-                x ,y = vertices[0] #第二个角点
+                x ,y = new_vertices[0] #第二个角点
 
 
             if x != 0 and red_point != [-1,-1]:
@@ -99,6 +99,7 @@ class ThreadedCamera(object):
 
                     print(f"dx: {dx}, dy: {dy}")
                     print(f"{angle_x}, {angle_y}")
+                    print(f"{x}, {y}")
 
                     if abs(dx) > 5 or abs(dy) > 5:
 

@@ -276,7 +276,7 @@ def draw_contour_and_vertices(img: cv2.Mat, vertices: List[List[int]], scale: fl
     except Exception as e:
         print(f"绘制过程中发生错误: {e}")
     
-    return img
+    return img, new_vertices
 
 img = None
 
