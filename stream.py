@@ -77,6 +77,8 @@ class ThreadedCamera(object):
 
             processed_frame, new_vertices = draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
 
+            print(new_vertices)
+
             if track_point == 0:
                 x ,y = cam.calculate_intersection(vertices)
 
@@ -124,8 +126,8 @@ class ThreadedCamera(object):
                         
                         track_done = 1
 
-                        """ if track_point == 4 and track_done == 1:
-                            track_point = 1 """
+                        if track_point == 4 and track_done == 1:
+                            track_point = 1 
 
                         if track_point < 4 and track_point != 0:
                             track_point = track_point + 1
