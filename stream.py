@@ -81,16 +81,16 @@ class ThreadedCamera(object):
                 x ,y = cam.calculate_intersection(vertices)
 
             elif track_point == 1:
-                x ,y = new_vertices[1] #第一个角点
+                x ,y = new_vertices[0] #第一个角点
 
             elif track_point == 2:
-                x ,y = new_vertices[2] #第二个角点
+                x ,y = new_vertices[1] #第二个角点
             
             elif track_point == 3:
-                x ,y = new_vertices[3] #第二个角点
+                x ,y = new_vertices[2] #第二个角点
 
             elif track_point == 4:
-                x ,y = new_vertices[0] #第二个角点
+                x ,y = new_vertices[3] #第二个角点
 
 
             if x != 0 and red_point != [-1,-1] and track_swtich:
