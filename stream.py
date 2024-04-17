@@ -137,29 +137,7 @@ class ThreadedCamera(object):
         cv2.waitKey(self.FPS_MS)
         
 
-def generate_frames():     # 远程调试显示用
-    # 320x240 640x480 960x720 1280x720 1920x1080
-    #url = 'http://192.168.100.44:4747/video?960x720'
-    #url = 'rtsp://192.168.100.4:8080/video/h264'
-    url = 'http://192.168.226.252:8080/video/mjpeg'
-    stream = ThreadedCamera(url)
 
-    while True:
-        frame = stream.frame
-        if frame is not None:
-            try:
-                #processed_frame = frame
-                processed_frame = stream.process_frame_outside(frame)
-                # 将处理后的帧编码为JPEG格式
-                _, jpeg_buffer = cv2.imencode('.jpg', processed_frame)
-
-                # 拼接MJPEG帧并返回
-                yield (b'--frame\r\n'
-                        b'Content-Type: image/jpeg\r\n\r\n' + jpeg_buffer.tobytes() + b'\r\n')
-            except Exception as e:
-                print(f"Error processing frame: {e}")
-                # 可以选择跳过该帧，继续处理下一帧，或者返回一个默认图像（如全黑图像）
-                continue
 
 app = Flask(__name__)
 
@@ -229,7 +207,32 @@ if __name__ == '__main__':
     servo.reset()
     
     if platform.system() == 'Linux':
+        def generate_frames():     # 远程调试显示用
+            # 320x240 640x480 960x720 1280x720 1920x1080
+            #url = 'http://192.168.100.44:4747/video?960x720'
+            #url = 'rtsp://192.168.100.4:8080/video/h264'
+            url = 'http://192.168.226.252:8080/video/mjpeg'
+            stream = ThreadedCamera(url)
+
+            while True:
+                frame = stream.frame
+                if frame is not None:
+                    try:
+                        #processed_frame = frame
+                        processed_frame = stream.process_frame_outside(frame)
+                        # 将处理后的帧编码为JPEG格式
+                        _, jpeg_buffer = cv2.imencode('.jpg', processed_frame)
+
+                        # 拼接MJPEG帧并返回
+                        yield (b'--frame\r\n'
+                                b'Content-Type: image/jpeg\r\n\r\n' + jpeg_buffer.tobytes() + b'\r\n')
+                    except Exception as e:
+                        print(f"Error processing frame: {e}")
+                        # 可以选择跳过该帧，继续处理下一帧，或者返回一个默认图像（如全黑图像）
+                        continue
+
         app.run(host='0.0.0.0', debug=True)
+        
     else:
         # 320x240 640x480 960x720 1280x720 1920x1080
         #url = 'http://192.168.100.4:4747/video?960x720'
