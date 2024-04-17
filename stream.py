@@ -77,24 +77,24 @@ class ThreadedCamera(object):
 
             processed_frame, new_vertices = draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
 
-            sorted_vertices = sorted(new_vertices, reverse=True)
+            """ sorted_vertices = sorted(new_vertices, reverse=True)
 
-            print(sorted_vertices)
+            print(sorted_vertices) """
 
             if track_point == 0:
                 x ,y = cam.calculate_intersection(vertices)
 
             elif track_point == 1:
-                x ,y = sorted_vertices[0] #第一个角点
+                x ,y = new_vertices[0] #第一个角点
 
             elif track_point == 2:
-                x ,y = sorted_vertices[1] #第二个角点
+                x ,y = new_vertices[1] #第二个角点
             
             elif track_point == 3:
-                x ,y = sorted_vertices[2] #第二个角点
+                x ,y = new_vertices[2] #第二个角点
 
             elif track_point == 4:
-                x ,y = sorted_vertices[3] #第二个角点
+                x ,y = new_vertices[3] #第二个角点
 
 
             if x != 0 and red_point != [-1,-1] and track_swtich:
