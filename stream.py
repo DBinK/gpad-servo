@@ -100,7 +100,7 @@ class ThreadedCamera(object):
 
                     print(f"dx: {dx}, dy: {dy}")
                     print(f"{angle_x}, {angle_y}")
-                    print(f"{x}, {y}")
+                    print(f"{x}, {y} \n")
 
                     if abs(dx) > 5 or abs(dy) > 5:
 
@@ -223,19 +223,19 @@ def key_listener():
             
             elif event.name == '1':
                 track_point = 1
-                print("追踪右上角")
+                print("追踪1号点")
             
             elif event.name == '2':
                 track_point = 2
-                print("追踪右下角")
+                print("追踪2号点")
 
             elif event.name == '3':
                 track_point = 3
-                print("追踪左下角")
+                print("追踪3号点")
 
             elif event.name == '4':
                 track_point = 4
-                print("追踪左上角")
+                print("追踪4号点")
 
     
     keyboard.on_press(on_press)  # 注册按键监听器

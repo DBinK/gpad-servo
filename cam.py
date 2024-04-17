@@ -293,7 +293,7 @@ if __name__ == "__main__":
 
     if vertices is not None:
 
-        print(f"四个顶点坐标: {vertices}")
+        #print(f"四个顶点坐标: {vertices}")
         roi_img = roi_cut(img, vertices)
         red_point, green_point = find_point(roi_img)
         if red_point is not None:
