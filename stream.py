@@ -14,7 +14,7 @@ servo = servo_driver.ServoController()
 
 angle_x, angle_y = 90 ,90
 
-kp = 0
+kp = 0.1
 ki = 0
 kd = 0.05
 
