@@ -13,10 +13,11 @@ from cam import pre_cut, roi_cut, draw_point, find_point, draw_contour_and_verti
 servo = servo_driver.ServoController()
 
 angle_x, angle_y = 90 ,90
-kd = 0.01
+kd = 0.005
 
+# 初始化键盘参数
 servo_on = 1
-speed = 0.3
+ctrl_speed = 0.3
 
 # 初始化追踪点, 中心点: 0 , 四个角点: 1, 2, 3, 4
 track_point = 0
@@ -46,7 +47,7 @@ class ThreadedCamera(object):
 
     def process_frame_outside(self, frame):
         # 创建一个副本来存储处理后的帧
-        global vertices, angle_x, angle_y, speed, track_point
+        global vertices, angle_x, angle_y, ctrl_speed, track_point
         processed_frame = frame.copy()
 
         processed_frame = pre_cut(processed_frame)
@@ -115,6 +116,11 @@ class ThreadedCamera(object):
                         servo.rotate_angle(0, angle_x)
                         servo.rotate_angle(3, angle_y)
 
+                    else:
+                        time.sleep(0.5) 
+                        if track_point < 3 or track_point != 0:
+                            track_point = track_point + 1
+
                 except Exception as e:
                     print(f"无法启动舵机跟踪: {e}")
 
@@ -167,7 +173,7 @@ def video_feed():
 # 定义按键监听函数
 def key_listener():
     def on_press(event):
-        global servo_on, angle_y, angle_x, speed, track_point
+        global servo_on, angle_y, angle_x, ctrl_speed, track_point
         print(event.name)
         if event.event_type == keyboard.KEY_DOWN:
             #time.sleep(0.5)   # 消除抖动
@@ -182,25 +188,25 @@ def key_listener():
                     print("恢复控制")
 
             elif event.name == 'a':
-                angle_x += speed
+                angle_x += ctrl_speed
                 servo.rotate_angle(0, angle_x) 
                 print(f"{angle_x} <-")
 
             elif event.name == 'd':
                 
-                angle_x -= speed
+                angle_x -= ctrl_speed
                 servo.rotate_angle(0, angle_x)
                 print(f"{angle_x} ->")
 
             elif event.name == 'w':
                 
-                angle_y -= speed
+                angle_y -= ctrl_speed
                 servo.rotate_angle(3, angle_y) 
                 print(f"{angle_y} A")
 
             elif event.name == 's':
                 
-                angle_y += speed
+                angle_y += ctrl_speed
                 servo.rotate_angle(3, angle_y) 
                 print(f"{angle_y} V")
 
