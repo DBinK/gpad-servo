@@ -121,14 +121,16 @@ class ThreadedCamera(object):
 
                     else:
                         time.sleep(0.5) 
+                        
+                        track_done = 1
 
-                        if track_point == 4 and track_done == 0:
-                            track_point = 1
+                        """ if track_point == 4 and track_done == 1:
+                            track_point = 1 """
 
                         if track_point < 4 and track_point != 0:
                             track_point = track_point + 1
                             
-                        track_done = 1
+                        
 
                         """ if track_point == 1 and track_done == 1:
                             track_swtich = 0 """
