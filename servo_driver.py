@@ -1,7 +1,7 @@
-import board
-import busio
+import board # type: ignore
+import busio # type: ignore
 import time
-from adafruit_pca9685 import PCA9685
+from adafruit_pca9685 import PCA9685 # type: ignore
 
 class ServoController:
     def __init__(self):

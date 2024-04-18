@@ -3,6 +3,7 @@ import keyboard
 
 import servo_driver
 
+servo = servo_driver.ServoController()
 
 def key_listener():
     def on_press(event):
