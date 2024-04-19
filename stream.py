@@ -14,9 +14,19 @@ servo = servo_driver.ServoController()
 
 angle_x, angle_y = 90 ,90
 
-kp = 0.1
-ki = 0
-kd = 0.05
+kp = 0.01
+ki = 0.000001
+kd = 0.01
+
+# MG995
+""" kp = 0.01
+ki = 0.000001
+kd = 0.01 """
+
+# SG90
+""" kp = 0.01
+ki = 0.001
+kd = 0.05 """
 
 #prev_error_x, prev_error_y
 prev_error_x, prev_error_y = 0, 0
@@ -24,7 +34,7 @@ ix, iy = 0, 0
 
 # 初始化键盘参数
 servo_on = 1
-ctrl_speed = 0.3
+ctrl_speed = 0.5
 
 # 初始化追踪点, 中心点: 0 , 四个角点: 1, 2, 3, 4
 track_point  = 0
@@ -72,7 +82,7 @@ class ThreadedCamera(object):
             #print(f"四个顶点坐标:\n {vertices}")
 
             roi_frame = roi_cut(processed_frame, vertices)
-            red_point,green_point = find_point(roi_frame)
+            green_point,red_point = find_point(roi_frame)  # 红点绿点改了这里
 
             if red_point[0] != 0:
                 processed_frame = draw_point(processed_frame,red_point)
@@ -142,6 +152,8 @@ class ThreadedCamera(object):
                         
                         track_done = 1
 
+                        print("完成追踪")
+
                         if track_point == 4 and track_done == 1:
                             track_point = 1
                             track_done = 0
@@ -149,6 +161,7 @@ class ThreadedCamera(object):
                         if track_point < 4 and track_point != 0 and track_done == 1:
                             track_point = track_point + 1
                             
+                        
                         
 
                         """ if track_point == 1 and track_done == 1:
@@ -291,7 +304,7 @@ if __name__ == '__main__':
     key_thread.start()
 
     servo.reset()
-    
+
     if platform.system() == 'Linux':
         def generate_frames():     # 远程调试显示用
             # 320x240 640x480 960x720 1280x720 1920x1080
