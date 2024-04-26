@@ -210,7 +210,8 @@ def draw_contour_and_vertices(img: cv2.Mat, vertices: List[List[int]], scale: fl
     :param scale: 缩小比例
     :return: 绘制后的图像
     """
-
+    new_vertices = []
+    
     try:   
         if vertices is not None:
             # 将四边形顶点列表转换为适合drawContours()的格式
