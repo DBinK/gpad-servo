@@ -8,8 +8,6 @@ from threading import Thread
 
 import servo_driver
 import cam
-from cam import pre_cut, roi_cut, draw_point, find_point, draw_contour_and_vertices, find_max_perimeter_contour, preprocess_image
-
 servo = servo_driver.ServoController()
 
 angle_x, angle_y = 90 ,90
@@ -45,7 +43,7 @@ class ThreadedCamera(object):
     def __init__(self, url):
         self.frame = None
         self.capture = cv2.VideoCapture(url)
-        self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 2)  # 设置最大缓冲区大小
+        self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 5)  # 设置最大缓冲区大小
 
         # 设定帧率
         self.FPS = 1 / 60
@@ -71,30 +69,32 @@ class ThreadedCamera(object):
 
         processed_frame = frame.copy()
 
-        processed_frame = pre_cut(processed_frame)
+        processed_frame = cam.pre_cut(processed_frame)
 
         # 在这里添加OpenCV处理代码
-        contours = preprocess_image(processed_frame)
+        contours = cam.preprocess_image(processed_frame)
         if contours is not None:
-            vertices = find_max_perimeter_contour(contours, 999999999, 100*4) # 最大,最小允许周长(mm)
+            vertices = cam.find_max_perimeter_contour(contours, 999999999, 100*4) # 最大,最小允许周长(mm)
 
         if vertices is not None:
             #print(f"四个顶点坐标:\n {vertices}")
 
-            roi_frame = roi_cut(processed_frame, vertices)
-            green_point,red_point = find_point(roi_frame)  # 红点绿点改了这里
+            roi_frame = cam.roi_cut(processed_frame, vertices)
+            green_point,red_point = cam.find_point(roi_frame)  # 红点绿点改了这里
 
             if red_point[0] != 0:
-                processed_frame = draw_point(processed_frame,red_point)
+                processed_frame = cam.draw_point(processed_frame,red_point)
             else:
                 red_point = [-1,-1]
                 
             if green_point[0] != 0:
-                processed_frame = draw_point(processed_frame,green_point)
+                processed_frame = cam.draw_point(processed_frame,green_point)
             else:
                 green_point = [-1,-1]    
 
-            processed_frame, new_vertices = draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
+            processed_frame, new_vertices = cam.draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
+
+            processed_frame = cam.draw_line_points(processed_frame, new_vertices)
 
             if track_point == 0:
                 x ,y = cam.calculate_intersection(vertices)
@@ -170,22 +170,6 @@ class ThreadedCamera(object):
                 except Exception as e:
                     print(f"无法启动舵机跟踪: {e}")
 
-        return processed_frame
-    
-    def process_frame_inside(self, frame):
-        # 创建一个副本来存储处理后的帧
-        global vertices
-        processed_frame = frame.copy()
-
-        # 在这里添加OpenCV处理代码
-        contours = preprocess_image(processed_frame)
-        if contours is not None:
-            vertices = find_max_perimeter_contour(contours, 20000*4, 30*4) # 最大,最小允许周长(mm)
-            print(f"四个顶点坐标:\n {vertices}")
-
-        if vertices is not None:
-            processed_frame = draw_contour_and_vertices(processed_frame, vertices, (276/297)) # 外框与内框宽度之比(mm) 靶纸是 (276/297)
-        
         return processed_frame
 
     def show_frame(self):  # 本地调试显示用
@@ -310,7 +294,7 @@ if __name__ == '__main__':
             # 320x240 640x480 960x720 1280x720 1920x1080
             #url = 'http://192.168.100.44:4747/video?960x720'
             #url = 'rtsp://192.168.100.4:8080/video/h264'
-            url = 'http://192.168.89.205:8080/video/mjpeg'
+            url = 'http://192.168.31.99:8080/video/mjpeg'
             stream = ThreadedCamera(url)
 
             while True:

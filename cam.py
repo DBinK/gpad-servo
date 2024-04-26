@@ -8,10 +8,10 @@ def calculate_intersection(vertices):
     计算四边形对角线的交点。
 
     参数:
-    vertices: 一个包含四个顶点坐标的列表，每个顶点是一个二元组(x, y)。
+    vertices: 一个包含四个顶点坐标的列表, 每个顶点是一个二元组(x, y)。
 
     返回值:
-    如果存在交点，返回交点的坐标(x, y)；如果不存在交点，返回None。
+    如果存在交点, 返回交点的坐标(x, y)；如果不存在交点, 返回None。
     """
     x1, y1 = vertices[0]
     x2, y2 = vertices[2]
@@ -46,17 +46,46 @@ def calculate_intersection(vertices):
 
 def shrink_rectangle(vertices, center_x, center_y, multiple):
     """
-    已知四边形四个顶点坐标和中心点坐标，计算缩小 multiple 倍后的四边形坐标
+    已知四边形四个顶点坐标和中心点坐标, 计算缩小 multiple 倍后的四边形坐标
     """
-    new_vertices = []
+    small_vertices = []
 
     for vertex in vertices:
         new_x = int(center_x + (vertex[0] - center_x) * multiple)
         new_y = int(center_y + (vertex[1] - center_y) * multiple)
-        new_vertices.append([new_x, new_y])
+        small_vertices.append([new_x, new_y])
 
-    return np.array(new_vertices, dtype=np.int32)
+    return np.array(small_vertices, dtype=np.int32)
 
+
+def average_points(point1, point2, N):
+    """
+    根据两个给定点和分段数N, 计算这两个点之间等分的坐标点列表。
+    """
+    delta_x = (point2[0] - point1[0]) / N
+    delta_y = (point2[1] - point1[1]) / N
+    
+    points_list = []
+    
+    for i in range(N+1):
+        x = point1[0] + delta_x * i
+        y = point1[1] + delta_y * i
+        points_list.append([x, y])
+    
+    return points_list
+
+def draw_line_points(image, small_vertices):
+    """
+    绘制等分点
+    """
+    for i, j in [0, 1], [1, 2], [2, 3], [3, 0]:
+        points_list = average_points(small_vertices[i], small_vertices[j], 4)
+        for point in points_list:
+            x, y = point
+            cv2.circle(image, (int(x), int(y)), 4, (0, 0, 255), -1)
+            #print(int(x),int(y))
+        #print("----------")
+    return image
 
 def pre_cut(image):
     # 指定裁剪区域的坐标和尺寸
@@ -68,7 +97,7 @@ def pre_cut(image):
 def preprocess_image(img):
 
     """
-    对输入图像进行预处理，包括灰度转换、高斯模糊、Canny边缘检测，并返回其中的轮廓信息。
+    对输入图像进行预处理, 包括灰度转换、高斯模糊、Canny边缘检测, 并返回其中的轮廓信息。
     """
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # 转换为灰度图像
 
@@ -93,9 +122,9 @@ def preprocess_image(img):
 def find_max_perimeter_contour(contours, max_allowed_perimeter, min_allowed_perimeter):
     # 输入参数校验
     if not contours or max_allowed_perimeter <= 0:
-        raise ValueError("输入的轮廓列表不能为空，且最大允许周长必须为正数。")
+        raise ValueError("输入的轮廓列表不能为空, 且最大允许周长必须为正数。")
 
-    # 初始化最大周长及对应轮廓变量，以及标志位表示是否找到符合条件的轮廓
+    # 初始化最大周长及对应轮廓变量, 以及标志位表示是否找到符合条件的轮廓
     max_perimeter = 0
     vertices = None
 
@@ -130,7 +159,7 @@ def find_max_perimeter_contour(contours, max_allowed_perimeter, min_allowed_peri
 
     # 检查是否找到符合条件的轮廓
     if vertices is None:
-        # 返回空列表代替None，或可选择抛出异常
+        # 返回空列表代替None, 或可选择抛出异常
         return None
     else:
         return vertices
@@ -203,20 +232,20 @@ def draw_point(image, point, bgr = ( 0, 255, 255) , color = ''):
 
 def draw_contour_and_vertices(img: cv2.Mat, vertices: List[List[int]], scale: float) -> cv2.Mat:
     """
-    在图像上绘制四边形的轮廓、顶点、对角线、交点，并等比缩小重新绘制。
+    在图像上绘制四边形的轮廓、顶点、对角线、交点, 并等比缩小重新绘制。
     
     :param img: 输入的OpenCV图像
-    :param vertices: 四边形的顶点列表，格式为[[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
+    :param vertices: 四边形的顶点列表, 格式为[[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
     :param scale: 缩小比例
     :return: 绘制后的图像
     """
-    new_vertices = []
+    small_vertices = []
     
     try:   
         if vertices is not None:
             # 将四边形顶点列表转换为适合drawContours()的格式
-            contour = np.array([vertices], dtype=np.int32)  # 创建一个二维numpy数组，形状为(1, N, 2)，其中N为顶点数
-            cv2.drawContours(img, [contour], 0, (255, 0, 0), 2)  # 绘制四边形的边框
+            contour = np.array([vertices], dtype=np.int32)  
+            cv2.drawContours(img, [contour], 0, (255, 0, 0), 2)  
         else: 
             print("顶点无效或缺失,跳过轮廓绘制。")  
 
@@ -259,12 +288,12 @@ def draw_contour_and_vertices(img: cv2.Mat, vertices: List[List[int]], scale: fl
             )
         
             # 绘制等比缩小后的图像
-            new_vertices = shrink_rectangle(
+            small_vertices = shrink_rectangle(
                 vertices, intersection[0], intersection[1], scale
             )
-            cv2.drawContours(img, [new_vertices], 0, (255, 0, 0), 2)  # 绘制四边形的边框
+            cv2.drawContours(img, [small_vertices], 0, (255, 0, 0), 2)  # 绘制四边形的边框
 
-            for vertex in new_vertices:
+            for vertex in small_vertices:
                 cv2.circle(img, vertex, 5, (0, 0, 255), -1)
                 cv2.putText(
                     img,
@@ -277,7 +306,7 @@ def draw_contour_and_vertices(img: cv2.Mat, vertices: List[List[int]], scale: fl
     except Exception as e:
         print(f"绘制过程中发生错误: {e}")
     
-    return img, new_vertices
+    return img, small_vertices
 
 img = None
 

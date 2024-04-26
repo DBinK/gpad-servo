@@ -1,57 +1,32 @@
-import keyboard
-import servo_driver
+def average_points(point1, point2, N=2):
+    """
+    根据两个给定点和分段数N, 计算这两个点之间等分的坐标点列表。
+    """
+    delta_x = (point2[0] - point1[0]) / N
+    delta_y = (point2[1] - point1[1]) / N
 
-servo = servo_driver.ServoController()
+    points_list = []
 
-top_angle = 90
-btn_angle = 90
-speed = 0.3
-on = 1
+    for i in range(N + 1):
+        x = point1[0] + delta_x * i
+        y = point1[1] + delta_y * i
+        points_list.append([x, y])
 
-def on_key_press(event):
-    global top_angle, btn_angle, speed, on
-
-    if event.name == 'a':
-        
-        btn_angle += speed
-        servo.rotate_angle(0, btn_angle) 
-        print(f"{btn_angle} <-")
-
-    elif event.name == 'd':
-        
-        btn_angle -= speed
-        servo.rotate_angle(0, btn_angle)
-        print(f"{btn_angle} ->")
-
-    elif event.name == 'w':
-        
-        top_angle -= speed
-        servo.rotate_angle(3, top_angle) 
-        print(f"{top_angle} A")
-
-    elif event.name == 's':
-        
-        top_angle += speed
-        servo.rotate_angle(3, top_angle) 
-        print(f"{top_angle} V")
-
-    elif event.name == 'r':
-        servo.reset()
-        top_angle = 90
-        btn_angle = 90
-
-        print(f"重置位置")
-
-    elif event.name == 'space':
-        if on:
-            servo.release()
-            on = 0
-            print(f"暂停控制")
-        else:
-            servo.restore()
-            on = 1
-            print(f"恢复控制")
+    return points_list
 
 
-keyboard.on_press(on_key_press)
-keyboard.wait()
+def draw_line_points(image, small_vertices):
+    for i, j in [0, 1], [1, 2], [2, 3], [3, 0]:
+        points_list = average_points(small_vertices[i], small_vertices[j], 4)
+        for point in points_list:
+            x, y = point
+            cv2.circle(image, (int(x), int(y)), 2, (0, 0, 255), -1)
+            """ print(int(x),int(y))
+        print("----------") """
+
+
+if __name__ == "__main__":
+
+    small_vertices = [[11, 21], [122, 12], [123, 213], [14, 214]]
+
+    draw_line_points(None, small_vertices)
