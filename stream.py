@@ -16,8 +16,8 @@ angle_x, angle_y = 90 ,90
 kp = 0.02
 ki = 0.0000001
 kd = 0.02
-line_seg_num = 4   #线段分段段数 (>=1)
-tolerance    = 8  #到达目标点误差允许范围
+line_seg_num = 4   # 线段分段段数 (>=1)
+tolerance    = 8   # 到达目标点误差允许范围
 
 # MG995
 """ kp = 0.02
@@ -37,10 +37,12 @@ ctrl_speed = 0.5
 # 初始化追踪点, 中心点: 0 , 四个角点: 1, 2, 3, 4
 track_point  = 0
 track_done   = 0
-track_swtich = 0
-point_num = 0
+track_switch = 0
+point_num    = 0
 
-detect_swtich = 1
+detect_switch = 1
+
+out_or_in = 0  # 0: 外框, 1: 内框
 
 class ThreadedCamera(object):
     def __init__(self, url):
@@ -67,9 +69,9 @@ class ThreadedCamera(object):
 
     def process_frame_outside(self, frame):
         # 创建一个副本来存储处理后的帧
-        global vertices, angle_x, angle_y, ctrl_speed, track_point, track_done, track_swtich
+        global vertices, angle_x, angle_y, ctrl_speed, track_point, track_done, track_switch
         global ix, iy, prev_error_x, prev_error_y
-        global point_num, line_seg_num, detect_swtich, tolerance
+        global point_num, line_seg_num, detect_switch, tolerance
 
         processed_frame = frame.copy()
 
@@ -77,14 +79,18 @@ class ThreadedCamera(object):
 
         # 在这里添加OpenCV处理代码
         contours = cam.preprocess_image(processed_frame)
-        if contours is not None and detect_swtich:
+        if contours is not None and detect_switch:
             vertices = cam.find_max_perimeter_contour(contours, 999999999, 100*4) # 最大,最小允许周长(mm)
 
         if vertices is not None:
             #print(f"四个顶点坐标:\n {vertices}")
 
-            roi_frame = cam.roi_cut(processed_frame, vertices)
-            red_point, green_point = cam.find_point(roi_frame)  # 红点绿点改了这里
+            if out_or_in == 0:
+                roi_frame = cam.roi_cut(processed_frame, vertices)
+                red_point, green_point = cam.find_point(roi_frame)  # 红点绿点改了这里
+
+            elif out_or_in == 1:
+                red_point, green_point = cam.find_point(processed_frame)  # 红点绿点改了这里
 
             if red_point[0] != 0:
                 processed_frame = cam.draw_point(processed_frame, red_point, color = 'red')
@@ -96,7 +102,18 @@ class ThreadedCamera(object):
             else:
                 green_point = [-1,-1]    
 
-            processed_frame, new_vertices = cam.draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
+            if out_or_in == 0:
+                rate = (500/600)
+
+            elif out_or_in == 1:
+                rate = (276/297)
+                kp = 0.02
+                ki = 0.0000001
+                kd = 0.02
+                line_seg_num = 2   # 线段分段段数 (>=1)
+                tolerance    = 5   # 到达目标点误差允许范围
+
+            processed_frame, new_vertices = cam.draw_contour_and_vertices(processed_frame, vertices, rate) # 外框与内框宽度之比 
 
             processed_frame = cam.draw_line_points(processed_frame, new_vertices, line_seg_num)
 
@@ -124,7 +141,7 @@ class ThreadedCamera(object):
                 print(f"当前追踪4号点: {x}, {y}\n")
 
 
-            if x != 0 and red_point != [-1,-1] and track_swtich:
+            if x != 0 and red_point != [-1,-1] and track_switch:
                 try: # 启动 PD 控制算法
                     limit = [60, 120]
 
@@ -214,7 +231,7 @@ def video_feed():
 # 定义按键监听函数
 def key_listener():
     def on_press(event):
-        global servo_on, angle_y, angle_x, ctrl_speed, track_point, track_swtich, detect_swtich
+        global servo_on, angle_y, angle_x, ctrl_speed, track_point, track_switch, detect_switch, out_or_in
         print(event.name)
         if event.event_type == keyboard.KEY_DOWN:
             #time.sleep(0.5)   # 消除抖动
@@ -229,22 +246,33 @@ def key_listener():
                     print("恢复控制")
 
             if event.name == 'p':
-                if track_swtich:
-                    track_swtich = 0
-                    detect_swtich = 1
+                if track_switch:
+                    track_switch = 0
+                    detect_switch = 1
                     print("暂停追踪")
                 else:
-                    track_swtich = 1
-                    detect_swtich = 0
+                    track_switch = 1
+                    detect_switch = 0
                     print("恢复追踪")
 
             if event.name == 'o':
-                if detect_swtich:
-                    detect_swtich = 0
+                if detect_switch:
+                    detect_switch = 0
                     print("暂停图像检测")
                 else:
-                    detect_swtich = 1
+                    detect_switch = 1
                     print("暂停图像检测")
+
+            if event.name == 'i':
+                if out_or_in == 1:
+                    out_or_in = 0
+                    print("切换到 外框")
+                    time.sleep(1)
+                else:
+                    out_or_in = 1
+                    print("切换到 内框")
+                    time.sleep(1)
+            
 
             elif event.name == 'a':
                 angle_x += ctrl_speed
@@ -278,13 +306,13 @@ def key_listener():
 
             elif event.name == '0':
                 track_point = 0
-                track_swtich = 1
-                detect_swtich = 0
+                track_switch = 1
+                detect_switch = 0
                 print("追踪中点")
             
             elif event.name == '1':
                 track_point = 1
-                track_swtich = 1
+                track_switch = 1
                 print("追踪1号点")
             
             elif event.name == '2':
