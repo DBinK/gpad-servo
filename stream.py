@@ -106,19 +106,22 @@ class ThreadedCamera(object):
             elif track_point == 1:
                 points_list = cam.average_points(new_vertices[3], new_vertices[2], line_seg_num)
                 x ,y = points_list[point_num] #第一个角点
-                print(f"当前追踪位置: {x}, {y}\n")
-
-            """ elif track_point == 1:
-                x ,y = new_vertices[3] #第一个角点
+                print(f"当前追踪1号点: {x}, {y}\n")
 
             elif track_point == 2:
-                x ,y = new_vertices[2] #第二个角点
-            
+                points_list = cam.average_points(new_vertices[2], new_vertices[1], line_seg_num)
+                x ,y = points_list[point_num] 
+                print(f"当前追踪2号点: {x}, {y}\n")
+
             elif track_point == 3:
-                x ,y = new_vertices[1] #第二个角点
+                points_list = cam.average_points(new_vertices[1], new_vertices[0], line_seg_num)
+                x ,y = points_list[point_num] 
+                print(f"当前追踪3号点: {x}, {y}\n")
 
             elif track_point == 4:
-                x ,y = new_vertices[0] #第二个角点 """
+                points_list = cam.average_points(new_vertices[0], new_vertices[3], line_seg_num)
+                x ,y = points_list[point_num] 
+                print(f"当前追踪4号点: {x}, {y}\n")
 
 
             if x != 0 and red_point != [-1,-1] and track_swtich:
@@ -166,15 +169,14 @@ class ThreadedCamera(object):
                         else:
                             point_num = 0
 
-                        print("完成追踪")
+                            if track_point == 4 and track_done == 1:
+                                track_point = 1
+                                track_done = 0
 
-                        """ if track_point == 4 and track_done == 1:
-                            track_point = 1
-                            track_done = 0
+                            if track_point < 4 and track_point != 0 and track_done == 1:
+                                track_point = track_point + 1 
 
-                        if track_point < 4 and track_point != 0 and track_done == 1:
-                            track_point = track_point + 1 """
-                        
+                        print("完成追踪")                        
 
                 except Exception as e:
                     print(f"无法启动舵机跟踪: {e}")
