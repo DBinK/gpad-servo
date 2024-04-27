@@ -16,20 +16,17 @@ angle_x, angle_y = 90 ,90
 kp = 0.02
 ki = 0.0000001
 kd = 0.02
-line_seg_num = 3   #线段分段段数
-tolerance    = 10  #到达目标点误差允许范围
+line_seg_num = 4   #线段分段段数 (>=1)
+tolerance    = 5  #到达目标点误差允许范围
 
 # MG995
 """ kp = 0.02
-ki = 0.000001
-kd = 0.008 """
+ki = 0.0000001
+kd = 0.02
+line_seg_num = 4   #线段分段段数 (>=1)
+tolerance    = 5  #到达目标点误差允许范围 """
 
-# SG90
-""" kp = 0.01
-ki = 0.001
-kd = 0.05 """
-
-#prev_error_x, prev_error_y
+# PID 初始化
 prev_error_x, prev_error_y = 0, 0
 ix, iy = 0, 0
 
