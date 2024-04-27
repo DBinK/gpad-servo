@@ -14,13 +14,15 @@ servo = servo_driver.ServoController()
 angle_x, angle_y = 90 ,90
 
 kp = 0.02
-ki = 0.000001
-kd = 0.008
+ki = 0.0000001
+kd = 0.02
+line_seg_num = 3   #线段分段段数
+tolerance    = 10  #到达目标点误差允许范围
 
 # MG995
-""" kp = 0.01
+""" kp = 0.02
 ki = 0.000001
-kd = 0.01 """
+kd = 0.008 """
 
 # SG90
 """ kp = 0.01
@@ -40,7 +42,6 @@ track_point  = 0
 track_done   = 0
 track_swtich = 0
 point_num = 0
-line_seg_num = 3 #线段分段段数
 
 detect_swtich = 1
 
@@ -71,7 +72,7 @@ class ThreadedCamera(object):
         # 创建一个副本来存储处理后的帧
         global vertices, angle_x, angle_y, ctrl_speed, track_point, track_done, track_swtich
         global ix, iy, prev_error_x, prev_error_y
-        global point_num, line_seg_num, detect_swtich
+        global point_num, line_seg_num, detect_swtich, tolerance
 
         processed_frame = frame.copy()
 
@@ -137,7 +138,7 @@ class ThreadedCamera(object):
                     print(f"{angle_x}, {angle_y}")
                     print(f"{x}, {y} \n")
 
-                    if abs(dx) > 5 or abs(dy) > 5:
+                    if abs(dx) > tolerance or abs(dy) > tolerance:
                         track_done = 0
 
                         ix = ix + dx
@@ -168,7 +169,7 @@ class ThreadedCamera(object):
 
                         if point_num < line_seg_num:
                             point_num += 1 
-                            detect_swtich = 0
+                            
                         else:
                             point_num = 0
 
@@ -178,8 +179,6 @@ class ThreadedCamera(object):
 
                             if track_point < 4 and track_point != 0 and track_done == 1:
                                 track_point = track_point + 1 
-
-                            # detect_swtich = 1
 
                         print("完成追踪")                        
 
@@ -235,12 +234,20 @@ def key_listener():
             if event.name == 'p':
                 if track_swtich:
                     track_swtich = 0
-                    detect_swtich =0
+                    detect_swtich = 1
                     print("暂停追踪")
                 else:
                     track_swtich = 1
-                    detect_swtich = 1
+                    detect_swtich = 0
                     print("恢复追踪")
+
+            if event.name == 'o':
+                if detect_swtich:
+                    detect_swtich = 0
+                    print("暂停图像检测")
+                else:
+                    detect_swtich = 1
+                    print("暂停图像检测")
 
             elif event.name == 'a':
                 angle_x += ctrl_speed
@@ -275,6 +282,7 @@ def key_listener():
             elif event.name == '0':
                 track_point = 0
                 track_swtich = 1
+                detect_swtich = 0
                 print("追踪中点")
             
             elif event.name == '1':
