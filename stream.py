@@ -8,6 +8,7 @@ from threading import Thread
 
 import servo_driver
 import cam
+
 servo = servo_driver.ServoController()
 
 angle_x, angle_y = 90 ,90
@@ -80,15 +81,15 @@ class ThreadedCamera(object):
             #print(f"四个顶点坐标:\n {vertices}")
 
             roi_frame = cam.roi_cut(processed_frame, vertices)
-            green_point,red_point = cam.find_point(roi_frame)  # 红点绿点改了这里
+            red_point, green_point = cam.find_point(roi_frame)  # 红点绿点改了这里
 
             if red_point[0] != 0:
-                processed_frame = cam.draw_point(processed_frame,red_point)
+                processed_frame = cam.draw_point(processed_frame, red_point, color = 'red')
             else:
                 red_point = [-1,-1]
                 
             if green_point[0] != 0:
-                processed_frame = cam.draw_point(processed_frame,green_point)
+                processed_frame = cam.draw_point(processed_frame, green_point, color = 'grn')
             else:
                 green_point = [-1,-1]    
 
@@ -160,8 +161,6 @@ class ThreadedCamera(object):
 
                         if track_point < 4 and track_point != 0 and track_done == 1:
                             track_point = track_point + 1
-                            
-                        
                         
 
                         """ if track_point == 1 and track_done == 1:
@@ -187,7 +186,6 @@ class ThreadedCamera(object):
             cv2.imshow('Processed Stream', processed_frame)
         cv2.waitKey(self.FPS_MS)
         
-
 
 
 app = Flask(__name__)

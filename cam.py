@@ -217,14 +217,14 @@ def find_point(image):
 
     return red_point, green_point
 
-def draw_point(image, point, bgr = ( 0, 255, 255) , color = ''):
+def draw_point(image, point, bgr = ( 0, 255, 255) , color = ' '):
 
     [x, y, w, h, center_x, center_y] = point
     # 在图像上绘制方框
     cv2.rectangle(image, (x, y), (x + w, y + h), bgr, 1)
 
     # 绘制坐标
-    text = f"{color}point: ({center_x}, {center_y})"
+    text = f"{color} point: ({center_x}, {center_y})"
     cv2.putText(image, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, bgr, 1)
 
     return image
