@@ -89,16 +89,16 @@ def draw_line_points(image, small_vertices, line_seg_num):
 
 def pre_cut(image):
     # 指定裁剪区域的坐标和尺寸
-    x = 175  # 左上角x坐标
+    """ x = 175  # 左上角x坐标
     y = 0  # 左上角y坐标
     w = 940  # 宽度
-    h = 660  # 高度
+    h = 660  # 高度 """
 
     
-    """ x = 162  # 左上角x坐标
+    x = 162  # 左上角x坐标
     y = 20  # 左上角y坐标
     w = 854  # 宽度
-    h = 480  # 高度 """
+    h = 480  # 高度
 
     return image[y:y+h, x:x+w]
 def preprocess_image(img):
@@ -194,7 +194,7 @@ def find_point(image):
             center_y = y + h / 2  # 计算中心点 y 坐标
 
             point = [x, y, w, h, center_x, center_y]
-            print(point)
+            # print(point)
             return point
         else:
             return [0,0,0,0,0,0]
