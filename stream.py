@@ -42,6 +42,8 @@ track_swtich = 0
 point_num = 0
 line_seg_num = 3 #线段分段段数
 
+detect_swtich = 1
+
 class ThreadedCamera(object):
     def __init__(self, url):
         self.frame = None
@@ -69,7 +71,7 @@ class ThreadedCamera(object):
         # 创建一个副本来存储处理后的帧
         global vertices, angle_x, angle_y, ctrl_speed, track_point, track_done, track_swtich
         global ix, iy, prev_error_x, prev_error_y
-        global point_num, line_seg_num
+        global point_num, line_seg_num, detect_swtich
 
         processed_frame = frame.copy()
 
@@ -77,7 +79,7 @@ class ThreadedCamera(object):
 
         # 在这里添加OpenCV处理代码
         contours = cam.preprocess_image(processed_frame)
-        if contours is not None:
+        if contours is not None and detect_swtich:
             vertices = cam.find_max_perimeter_contour(contours, 999999999, 100*4) # 最大,最小允许周长(mm)
 
         if vertices is not None:
@@ -166,6 +168,7 @@ class ThreadedCamera(object):
 
                         if point_num < line_seg_num:
                             point_num += 1 
+                            detect_swtich = 0
                         else:
                             point_num = 0
 
@@ -175,6 +178,8 @@ class ThreadedCamera(object):
 
                             if track_point < 4 and track_point != 0 and track_done == 1:
                                 track_point = track_point + 1 
+
+                            # detect_swtich = 1
 
                         print("完成追踪")                        
 
@@ -213,7 +218,7 @@ def video_feed():
 # 定义按键监听函数
 def key_listener():
     def on_press(event):
-        global servo_on, angle_y, angle_x, ctrl_speed, track_point, track_swtich
+        global servo_on, angle_y, angle_x, ctrl_speed, track_point, track_swtich, detect_swtich
         print(event.name)
         if event.event_type == keyboard.KEY_DOWN:
             #time.sleep(0.5)   # 消除抖动
@@ -230,9 +235,11 @@ def key_listener():
             if event.name == 'p':
                 if track_swtich:
                     track_swtich = 0
+                    detect_swtich =0
                     print("暂停追踪")
                 else:
                     track_swtich = 1
+                    detect_swtich = 1
                     print("恢复追踪")
 
             elif event.name == 'a':
