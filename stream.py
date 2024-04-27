@@ -12,6 +12,9 @@ import cam
 servo = servo_driver.ServoController()
 
 angle_x, angle_y = 90 ,90
+new_vertices = []
+vertices = []
+red_point, green_point = [0, 0], [0, 0]
 
 kp = 0.02
 ki = 0.0000001
@@ -29,6 +32,7 @@ tolerance    = 5  #到达目标点误差允许范围 """
 # PID 初始化
 prev_error_x, prev_error_y = 0, 0
 ix, iy = 0, 0
+g_ix, g_iy, g_prev_error_x, g_prev_error_y = 0, 0, 0, 0
 
 # 初始化键盘参数
 servo_on = 1
@@ -72,6 +76,7 @@ class ThreadedCamera(object):
         global vertices, angle_x, angle_y, ctrl_speed, track_point, track_done, track_switch
         global ix, iy, prev_error_x, prev_error_y
         global point_num, line_seg_num, detect_switch, tolerance
+        global new_vertices, red_point, green_point
 
         processed_frame = frame.copy()
 
@@ -93,11 +98,13 @@ class ThreadedCamera(object):
                 red_point, green_point = cam.find_point(processed_frame)  # 红点绿点改了这里
 
             if red_point[0] != 0:
+                print(f"红色点: {red_point}")
                 processed_frame = cam.draw_point(processed_frame, red_point, color = 'red')
             else:
                 red_point = [-1,-1]
                 
             if green_point[0] != 0:
+                print(f"绿色点: {green_point}")
                 processed_frame = cam.draw_point(processed_frame, green_point, color = 'grn')
             else:
                 green_point = [-1,-1]    
@@ -107,11 +114,11 @@ class ThreadedCamera(object):
 
             elif out_or_in == 1:
                 rate = (276/297)
-                kp = 0.02
-                ki = 0.0000001
+                kp = 0.005
+                ki = 0 #.0000001
                 kd = 0.02
-                line_seg_num = 2   # 线段分段段数 (>=1)
-                tolerance    = 5   # 到达目标点误差允许范围
+                line_seg_num = 4   # 线段分段段数 (>=1)
+                tolerance    = 10   # 到达目标点误差允许范围
 
             processed_frame, new_vertices = cam.draw_contour_and_vertices(processed_frame, vertices, rate) # 外框与内框宽度之比 
 
@@ -149,8 +156,7 @@ class ThreadedCamera(object):
                     dy = y - red_point[5]
 
                     print(f"dx: {dx}, dy: {dy}")
-                    print(f"{angle_x}, {angle_y}")
-                    print(f"{x}, {y} \n")
+                    print(f"红点舵机角度: {angle_x}, {angle_y}")
 
                     if abs(dx) > tolerance or abs(dy) > tolerance:
                         track_done = 0
@@ -199,7 +205,13 @@ class ThreadedCamera(object):
                 except Exception as e:
                     print(f"无法启动舵机跟踪: {e}")
 
+            if green_point != [-1,-1] and red_point != [-1,-1]:
+                print(f"打开控制 grn_ctrl: {green_point}")
+                grn_ctrl(red_point, green_point)
+
         return processed_frame
+
+
 
     def show_frame(self):  # 本地调试显示用
         cv2.namedWindow('Original MJPEG Stream', cv2.WINDOW_NORMAL)
@@ -217,6 +229,58 @@ class ThreadedCamera(object):
         cv2.waitKey(self.FPS_MS)
         
 
+
+def grn_ctrl(red_point, green_point):
+
+    global g_ix, g_iy, g_prev_error_x, g_prev_error_y
+
+    kp = 0.005
+    ki = 0 #.0000001
+    kd = 0.02
+
+    x = red_point[4]
+    y = red_point[5]
+
+    if green_point != [-1,-1] and track_switch:
+        try: # 启动 PD 控制算法
+            limit = [60, 120]
+
+            dx = x - green_point[4]
+            dy = y - green_point[5]
+
+            print(f"绿点 dx: {dx}, dy: {dy}")
+            print(f"绿点舵机角度: {angle_x}, {angle_y}")
+
+            if abs(dx) > tolerance or abs(dy) > tolerance:
+
+                ix = g_ix + dx
+                iy = g_iy + dy
+
+                ddx = dx - g_prev_error_x
+                ddy = dy - g_prev_error_y
+
+                angle_x = angle_x - (kp*dx + ki*ix + kd * ddx)
+                angle_y = angle_y + (kp*dy + ki*iy + kd * ddy) #这里取正负方向
+
+                g_prev_error_x = dx
+                g_prev_error_y = dy
+
+                if angle_x < limit[0]: 
+                    angle_x = limit[0]
+                    
+                if angle_y > limit[1]:
+                    angle_y = limit[1]
+                                
+                servo.rotate_angle(4, angle_x)
+                servo.rotate_angle(7, angle_y)
+
+            else:
+                print("完成追踪")      
+                time.sleep(0.5) 
+        
+
+        except Exception as e:
+            print(f"无法启动舵机跟踪: {e}")
 
 app = Flask(__name__)
 
@@ -344,14 +408,13 @@ if __name__ == '__main__':
             # 320x240 640x480 960x720 1280x720 1920x1080
             #url = 'http://192.168.100.44:4747/video?960x720'
             #url = 'rtsp://192.168.100.4:8080/video/h264'
-            url = 'http://192.168.31.207:8080/video/mjpeg'
+            url = 'http://192.168.31.99:8080/video/mjpeg'
             stream = ThreadedCamera(url)
 
             while True:
                 frame = stream.frame
                 if frame is not None:
                     try:
-                        #processed_frame = frame
                         processed_frame = stream.process_frame_outside(frame)
                         # 将处理后的帧编码为JPEG格式
                         _, jpeg_buffer = cv2.imencode('.jpg', processed_frame)
