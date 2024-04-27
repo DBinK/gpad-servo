@@ -13,9 +13,9 @@ servo = servo_driver.ServoController()
 
 angle_x, angle_y = 90 ,90
 
-kp = 0.01
+kp = 0.02
 ki = 0.000001
-kd = 0.01
+kd = 0.008
 
 # MG995
 """ kp = 0.01
