@@ -1,9 +1,7 @@
-from time import sleep
-import cv2
-import cam
+import time 
+import servo_driver
 
-url = 0
-vcap = cv2.VideoCapture(url)
+servo = servo_driver.ServoController()
 
 x, y = 100, 100
 track = True
@@ -17,56 +15,60 @@ integral_error_y = 0  # 积分误差（Y轴）
 prev_error_x = 0  # 上一帧误差（X轴）
 prev_error_y = 0  # 上一帧误差（Y轴）
 
-if __name__ == '__main__':
-    while True:
-        ret, frame = vcap.read()
 
-        if url == 0:
-            frame = cv2.flip(frame, 1)
+angle_x, angle_y = 90 ,90
 
-        red_point, green_point = cam.find_point(frame)
+limit = [60, 120]
 
-        if red_point[0] != 0:
-            frame = cam.draw_point(frame, red_point, color = 'track')
+def pid_ctrl(red_point, track_point):
+    global x, y, track, angle_x, angle_y, prev_error_x, prev_error_y, ix, iy, track_done
+    
 
-        if track:
-            r_x, r_y = red_point[4], red_point[5]
+    dx = x - red_point[4]
+    dy = y - red_point[5]
 
-            # 计算当前误差
-            error_x = r_x - x
-            error_y = r_y - y
+    print(f"dx: {dx}, dy: {dy}")
+    print(f"{angle_x}, {angle_y}")
+    print(f"{x}, {y} \n")
 
-            # 积分误差更新
-            integral_error_x += error_x
-            integral_error_y += error_y
+    if abs(dx) > 5 or abs(dy) > 5:
+        track_done = 0
 
-            # 微分误差计算
-            diff_error_x = error_x - prev_error_x
-            diff_error_y = error_y - prev_error_y
+        ix = ix + dx
+        iy = iy + dy
 
-            # PID控制输出
-            u_x = kp * error_x + ki * integral_error_x + kd * diff_error_x
-            u_y = kp * error_y + ki * integral_error_y + kd * diff_error_y
+        ddx = dx - prev_error_x
+        ddy = dy - prev_error_y
 
-            # 更新跟踪点位置（限幅可选，避免剧烈震荡）
-            x = int(x + u_x)
-            y = int(y + u_y)
+        angle_x = angle_x - (kp*dx + ki*ix + kd * ddx)
+        angle_y = angle_y + (kp*dy + ki*iy + kd * ddy) #这里取正负方向
 
-            track_point = [red_point[0], red_point[1], 30, 30, x, y]
-            frame = cam.draw_point(frame, track_point)
+        prev_error_x = dx
+        prev_error_y = dy
 
-            # 保存当前误差作为下一次微分误差计算的参考
-            prev_error_x = error_x
-            prev_error_y = error_y
+        if angle_x < limit[0]: 
+            angle_x = limit[0]
+            
+        if angle_y > limit[1]:
+            angle_y = limit[1]
+                        
+        servo.rotate_angle(0, angle_x)
+        servo.rotate_angle(3, angle_y)
 
-        cv2.imshow('VIDEO', frame)
+    else:
+        time.sleep(0.5) 
+        
+        track_done = 1
 
-        if cv2.waitKey(1) & 0xFF == ord('t'):
-            track = not track
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        print("完成追踪")
 
-        sleep(0.0333333)
+        if track_point == 4 and track_done == 1:
+            track_point = 1
+            track_done = 0
 
-vcap.release()
-cv2.destroyAllWindows()
+        if track_point < 4 and track_point != 0 and track_done == 1:
+            track_point = track_point + 1
+        
+
+        """ if track_point == 1 and track_done == 1:
+            track_swtich = 0 """
