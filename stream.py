@@ -40,6 +40,7 @@ track_point  = 0
 track_done   = 0
 track_swtich = 0
 point_num = 0
+line_seg_num = 3 #线段分段段数
 
 class ThreadedCamera(object):
     def __init__(self, url):
@@ -66,8 +67,9 @@ class ThreadedCamera(object):
 
     def process_frame_outside(self, frame):
         # 创建一个副本来存储处理后的帧
-        global vertices, angle_x, angle_y, ctrl_speed, track_point, track_done, track_swtich, point_num
+        global vertices, angle_x, angle_y, ctrl_speed, track_point, track_done, track_swtich
         global ix, iy, prev_error_x, prev_error_y
+        global point_num, line_seg_num
 
         processed_frame = frame.copy()
 
@@ -96,13 +98,13 @@ class ThreadedCamera(object):
 
             processed_frame, new_vertices = cam.draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
 
-            processed_frame = cam.draw_line_points(processed_frame, new_vertices)
+            processed_frame = cam.draw_line_points(processed_frame, new_vertices, line_seg_num)
 
             if track_point == 0:
                 x ,y = cam.calculate_intersection(vertices)
 
             elif track_point == 1:
-                points_list = cam.average_points(new_vertices[3], new_vertices[2], 4)
+                points_list = cam.average_points(new_vertices[3], new_vertices[2], line_seg_num)
                 x ,y = points_list[point_num] #第一个角点
                 print(f"当前追踪位置: {x}, {y}\n")
 
@@ -159,7 +161,7 @@ class ThreadedCamera(object):
                         
                         track_done = 1
 
-                        if point_num < 4:
+                        if point_num < line_seg_num:
                             point_num += 1 
                         else:
                             point_num = 0

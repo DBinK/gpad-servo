@@ -74,12 +74,12 @@ def average_points(point1, point2, N):
     
     return points_list
 
-def draw_line_points(image, small_vertices):
+def draw_line_points(image, small_vertices, line_seg_num):
     """
     绘制等分点
     """
     for i, j in [0, 1], [1, 2], [2, 3], [3, 0]:
-        points_list = average_points(small_vertices[i], small_vertices[j], 4)
+        points_list = average_points(small_vertices[i], small_vertices[j], line_seg_num)
         for point in points_list:
             x, y = point
             cv2.circle(image, (int(x), int(y)), 4, (0, 0, 255), -1)
