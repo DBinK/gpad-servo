@@ -1,4 +1,6 @@
 import platform
+import board    # noqa: F401
+from digitalio import DigitalInOut, Direction  # noqa: F401
 
 from flask import Flask, render_template, Response
 import cv2
@@ -14,20 +16,26 @@ servo = servo_driver.ServoController()
 angle_x, angle_y = 90 ,90
 new_vertices = []
 vertices = []
-red_point, green_point = [0, 0], [0, 0]
+red_point, green_point = [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]
 
-kp = 0.02
+kp = 0.025
 ki = 0.0000001
 kd = 0.02
-line_seg_num = 4   # 线段分段段数 (>=1)
+line_seg_num = 10   # 线段分段段数 (>=1)
 tolerance    = 8   # 到达目标点误差允许范围
+
+""" kp = 0.025
+ki = 0.0000001
+kd = 0.02
+line_seg_num = 10   # 线段分段段数 (>=1)
+tolerance    = 8   # 到达目标点误差允许范围 """
 
 # MG995
 """ kp = 0.02
 ki = 0.0000001
 kd = 0.02
-line_seg_num = 4   #线段分段段数 (>=1)
-tolerance    = 5  #到达目标点误差允许范围 """
+line_seg_num = 5   # 线段分段段数 (>=1)
+tolerance    = 8   # 到达目标点误差允许范围 """
 
 # PID 初始化
 prev_error_x, prev_error_y = 0, 0
@@ -41,7 +49,8 @@ ctrl_speed = 0.5
 # 初始化追踪点, 中心点: 0 , 四个角点: 1, 2, 3, 4
 track_point  = 0
 track_done   = 0
-track_switch = 0
+red_track_switch = 0
+green_track_switch = 0
 point_num    = 0
 
 detect_switch = 1
@@ -73,10 +82,10 @@ class ThreadedCamera(object):
 
     def process_frame_outside(self, frame):
         # 创建一个副本来存储处理后的帧
-        global vertices, angle_x, angle_y, ctrl_speed, track_point, track_done, track_switch
-        global ix, iy, prev_error_x, prev_error_y
+        global vertices, angle_x, angle_y, ctrl_speed, track_point, track_done
+        global ix, iy, prev_error_x, prev_error_y, kp, ki, kd
         global point_num, line_seg_num, detect_switch, tolerance
-        global new_vertices, red_point, green_point
+        global new_vertices, red_point, green_point, red_track_switch, green_track_switch
 
         processed_frame = frame.copy()
 
@@ -130,25 +139,25 @@ class ThreadedCamera(object):
             elif track_point == 1:
                 points_list = cam.average_points(new_vertices[3], new_vertices[2], line_seg_num)
                 x ,y = points_list[point_num] #第一个角点
-                print(f"当前追踪1号点: {x}, {y}\n")
+                print(f"当前追踪1号点[{point_num}/{line_seg_num}]: {x}, {y}\n")
 
             elif track_point == 2:
                 points_list = cam.average_points(new_vertices[2], new_vertices[1], line_seg_num)
                 x ,y = points_list[point_num] 
-                print(f"当前追踪2号点: {x}, {y}\n")
+                print(f"当前追踪2号点[{point_num}/{line_seg_num}]: {x}, {y}\n")
 
             elif track_point == 3:
                 points_list = cam.average_points(new_vertices[1], new_vertices[0], line_seg_num)
                 x ,y = points_list[point_num] 
-                print(f"当前追踪3号点: {x}, {y}\n")
+                print(f"当前追踪3号点[{point_num}/{line_seg_num}]: {x}, {y}\n")
 
             elif track_point == 4:
                 points_list = cam.average_points(new_vertices[0], new_vertices[3], line_seg_num)
                 x ,y = points_list[point_num] 
-                print(f"当前追踪4号点: {x}, {y}\n")
+                print(f"当前追踪4号点[{point_num}/{line_seg_num}]: {x}, {y}\n")
 
 
-            if x != 0 and red_point != [-1,-1] and track_switch:
+            if x != 0 and red_point != [-1,-1] and red_track_switch:
                 try: # 启动 PD 控制算法
                     limit = [60, 120]
 
@@ -183,7 +192,7 @@ class ThreadedCamera(object):
                         servo.rotate_angle(3, angle_y)
 
                     else:
-                        time.sleep(0.5) 
+                        # time.sleep(0.5) 
                         
                         track_done = 1
 
@@ -205,9 +214,9 @@ class ThreadedCamera(object):
                 except Exception as e:
                     print(f"无法启动舵机跟踪: {e}")
 
-            if green_point != [-1,-1] and red_point != [-1,-1]:
+            if green_point != [-1,-1] and red_point != [-1,-1] and green_track_switch:
                 print(f"打开控制 grn_ctrl: {green_point}")
-                grn_ctrl(red_point, green_point)
+                # grn_ctrl(red_point, green_point)
 
         return processed_frame
 
@@ -236,12 +245,12 @@ def grn_ctrl(red_point, green_point):
 
     kp = 0.005
     ki = 0 #.0000001
-    kd = 0.02
+    kd = 0
 
     x = red_point[4]
     y = red_point[5]
 
-    if green_point != [-1,-1] and track_switch:
+    if green_point != [-1,-1] and red_track_switch:
         try: # 启动 PD 控制算法
             limit = [60, 120]
 
@@ -295,7 +304,7 @@ def video_feed():
 # 定义按键监听函数
 def key_listener():
     def on_press(event):
-        global servo_on, angle_y, angle_x, ctrl_speed, track_point, track_switch, detect_switch, out_or_in
+        global servo_on, angle_y, angle_x, ctrl_speed, track_point, red_track_switch, detect_switch, out_or_in
         print(event.name)
         if event.event_type == keyboard.KEY_DOWN:
             #time.sleep(0.5)   # 消除抖动
@@ -310,14 +319,14 @@ def key_listener():
                     print("恢复控制")
 
             if event.name == 'p':
-                if track_switch:
-                    track_switch = 0
+                if red_track_switch:
+                    red_track_switch = 0
                     detect_switch = 1
-                    print("暂停追踪")
+                    print("暂停红点的追踪")
                 else:
-                    track_switch = 1
+                    red_track_switch = 1
                     detect_switch = 0
-                    print("恢复追踪")
+                    print("暂停红点的追踪")
 
             if event.name == 'o':
                 if detect_switch:
@@ -370,13 +379,13 @@ def key_listener():
 
             elif event.name == '0':
                 track_point = 0
-                track_switch = 1
+                red_track_switch = 1
                 detect_switch = 0
                 print("追踪中点")
             
             elif event.name == '1':
                 track_point = 1
-                track_switch = 1
+                red_track_switch = 1
                 print("追踪1号点")
             
             elif event.name == '2':
@@ -408,7 +417,7 @@ if __name__ == '__main__':
             # 320x240 640x480 960x720 1280x720 1920x1080
             #url = 'http://192.168.100.44:4747/video?960x720'
             #url = 'rtsp://192.168.100.4:8080/video/h264'
-            url = 'http://192.168.31.99:8080/video/mjpeg'
+            url = 'http://192.168.43.1:8080/video/mjpeg'
             stream = ThreadedCamera(url)
 
             while True:

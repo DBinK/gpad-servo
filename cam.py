@@ -159,8 +159,8 @@ def find_max_perimeter_contour(contours, max_allowed_perimeter, min_allowed_peri
                     angle = np.arccos(cosine_angle) * 180 / np.pi
                     cosines.append(angle)
 
-                # 若当前轮廓周长在允许范围内、大于当前最大周长且角度大于等于75度
-                if all(angle >= 45 for angle in cosines):
+                # 若当前轮廓周长在允许范围内、大于当前最大周长且角度大于等于N度
+                if all(angle >= 30 for angle in cosines):
                     max_perimeter = perimeter
                     vertices = approx.reshape(4, 2)
 
