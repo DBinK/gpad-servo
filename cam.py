@@ -295,9 +295,17 @@ def draw_contour_and_vertices(img: cv2.Mat, vertices: List[List[int]], scale: fl
             )
         
             # 绘制等比缩小后的图像
-            small_vertices = shrink_rectangle(
+            """ small_vertices = shrink_rectangle(
                 vertices, intersection[0], intersection[1], scale
-            )
+            ) """
+
+            _, inv_M = persp_trans(img, vertices)  # 获取透视变换矩阵
+            
+            small_vertices = shrink_rectangle_new(img, scale)  # 缩小矩形
+
+            small_vertices = inv_trans_vertices(small_vertices, inv_M)
+
+
             cv2.drawContours(img, [small_vertices], 0, (255, 0, 0), 2)  # 绘制四边形的边框
 
             for vertex in small_vertices:
@@ -314,6 +322,83 @@ def draw_contour_and_vertices(img: cv2.Mat, vertices: List[List[int]], scale: fl
         print(f"绘制过程中发生错误: {e}")
     
     return img, small_vertices
+
+####################################################
+
+def persp_trans(img, vertices):
+    # 对四边形顶点坐标进行排序
+    rect = np.zeros((4, 2), dtype="float32")
+    rect[0] = vertices[0]
+    rect[1] = vertices[3]
+    rect[2] = vertices[2]
+    rect[3] = vertices[1]
+
+    height, width = img.shape[:2]  # 获取图像的高度和宽度
+
+    # 定义目标矩形的顶点坐标，即变换后的图像矩形框
+    dst = np.array([[0, 0], [width - 1, 0], [width - 1, height - 1], [0, height - 1]], dtype="float32")
+
+    # 计算透视变换矩阵
+    M = cv2.getPerspectiveTransform(rect, dst)
+    inv_M = np.linalg.inv(M)
+
+    # 返回变换后的图像及变换矩阵
+    return M, inv_M
+
+def draw_warped_image(img, M, inv_M):
+    
+    height, width = img.shape[:2]  # 获取图像的高度和宽度
+
+    # 应用透视变换到图像上
+    warped_image = cv2.warpPerspective(img, M, (width, height))
+
+    # 应用逆透视变换到图像
+    inv_warped_image = cv2.warpPerspective(warped_image, inv_M,  (width, height))
+    
+    return warped_image, inv_warped_image
+
+
+def shrink_rectangle_new(img, scale):
+
+    height, width = img.shape[:2]
+
+    rectangle_vertices = [[],[],[],[]]
+    
+    rectangle_vertices[0] = [0, 0]
+    rectangle_vertices[1] = [0, height]
+    rectangle_vertices[2] = [width, height]
+    rectangle_vertices[3] = [width, 0]
+
+    #print (rectangle_vertices)
+
+    center_x = width // 2
+    center_y = height // 2
+
+    small_vertices = []
+
+    for vertex in rectangle_vertices:
+        new_x = int(center_x + (vertex[0] - center_x) * scale)
+        new_y = int(center_y + (vertex[1] - center_y) * scale)
+        small_vertices.append([new_x, new_y])
+
+    #print (small_vertices)
+
+    return np.array(small_vertices, dtype=np.int32)
+
+
+def inv_trans_vertices(small_vertices, inv_M):
+    
+    vertices_array = np.array(small_vertices, dtype=np.float32)
+    vertices_homo = np.concatenate([vertices_array, np.ones((vertices_array.shape[0], 1))], axis=1)
+    
+    inv_trans_vertices_homo = np.dot(inv_M, vertices_homo.T).T
+    inv_trans_vertices = inv_trans_vertices_homo[:, :2] / inv_trans_vertices_homo[:, 2, None]
+    
+    inv_trans_vertices_int = inv_trans_vertices.astype(int)
+
+    return inv_trans_vertices_int
+
+#################################################################
 
 img = None
 
@@ -338,7 +423,7 @@ if __name__ == "__main__":
         if green_point is not None:
             draw_point(img, green_point, color = 'green ')
 
-        img = draw_contour_and_vertices(img, vertices, (276 / 297)) # (0.5/0.6)  
+        img, _ = draw_contour_and_vertices(img, vertices, (5/6)) # (0.5/0.6)  
 
     # 显示的图像
     cv2.imshow("final", img)
