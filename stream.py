@@ -1,4 +1,5 @@
 import platform
+import subprocess
 import board    # noqa: F401
 from digitalio import DigitalInOut, Direction  # noqa: F401
 
@@ -6,6 +7,7 @@ from flask import Flask, render_template, Response
 import cv2
 import time
 import keyboard
+import numpy as np
 from threading import Thread
 
 import servo_driver
@@ -93,6 +95,7 @@ class ThreadedCamera(object):
 
         # 在这里添加OpenCV处理代码
         contours = cam.preprocess_image(processed_frame)
+
         if contours is not None and detect_switch:
             vertices = cam.find_max_perimeter_contour(contours, 999999999, 100*4) # 最大,最小允许周长(mm)
 
@@ -104,7 +107,18 @@ class ThreadedCamera(object):
                 red_point, green_point = cam.find_point(roi_frame)  # 红点绿点改了这里
 
             elif out_or_in == 1:
-                red_point, green_point = cam.find_point(processed_frame)  # 红点绿点改了这里
+
+                intersection = cam.calculate_intersection(vertices)  # 计算两个对角线的交点
+
+                big_vertices = cam.shrink_rectangle(vertices, intersection[0], intersection[1], 2.0)
+
+                """ if big_vertices is not None:
+                    # 将四边形顶点列表转换为适合drawContours()的格式
+                    contour = np.array([big_vertices], dtype=np.int32)  
+                    cv2.drawContours(processed_frame, [contour], 0, (0, 0, 255), 2) """  
+
+                roi_frame = cam.roi_cut(processed_frame, big_vertices)
+                red_point, green_point = cam.find_point(roi_frame)  # 红点绿点改了这里
 
             if red_point[0] != 0:
                 print(f"红色点: {red_point}")
@@ -123,10 +137,10 @@ class ThreadedCamera(object):
 
             elif out_or_in == 1:
                 rate = (276/297)
-                kp = 0.005
+                kp = 0.008
                 ki = 0 #.0000001
                 kd = 0.02
-                line_seg_num = 4   # 线段分段段数 (>=1)
+                line_seg_num = 2   # 线段分段段数 (>=1)
                 tolerance    = 10   # 到达目标点误差允许范围
 
             processed_frame, new_vertices = cam.draw_contour_and_vertices(processed_frame, vertices, rate) # 外框与内框宽度之比 
@@ -238,6 +252,13 @@ class ThreadedCamera(object):
         cv2.waitKey(self.FPS_MS)
         
 
+def red_flash(pin, times):
+    pin_str = str(pin)
+    for i in range(0, times*2):
+        subprocess.call(['gpio', 'toggle', pin_str])
+        time.sleep(0.2)
+        if i == times*2:
+            break
 
 def grn_ctrl(red_point, green_point):
 
