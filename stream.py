@@ -15,7 +15,9 @@ import cam
 
 servo = servo_driver.ServoController()
 
-angle_x, angle_y = 90 ,90
+red_angle_x, red_angle_y = 90 ,90
+grn_angle_x, grn_angle_y = 90 ,90
+
 new_vertices = []
 vertices = []
 red_point, green_point = [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]
@@ -83,8 +85,8 @@ class ThreadedCamera(object):
             time.sleep(self.FPS)
 
     def process_frame_outside(self, frame):
-        # 创建一个副本来存储处理后的帧
-        global vertices, angle_x, angle_y, ctrl_speed, track_point, track_done
+        
+        global vertices, red_angle_x, red_angle_y, ctrl_speed, track_point, track_done
         global ix, iy, prev_error_x, prev_error_y, kp, ki, kd
         global point_num, line_seg_num, detect_switch, tolerance
         global new_vertices, red_point, green_point, red_track_switch, grn_track_switch
@@ -186,7 +188,7 @@ class ThreadedCamera(object):
                     dy = y - red_point[5]
 
                     print(f"dx: {dx}, dy: {dy}")
-                    print(f"红点舵机角度: {angle_x}, {angle_y}")
+                    print(f"红点舵机角度: {red_angle_x}, {red_angle_y}")
 
                     if abs(dx) > tolerance or abs(dy) > tolerance:
                         track_done = 0
@@ -197,20 +199,20 @@ class ThreadedCamera(object):
                         ddx = dx - prev_error_x
                         ddy = dy - prev_error_y
 
-                        angle_x = angle_x - (kp*dx + ki*ix + kd * ddx)
-                        angle_y = angle_y + (kp*dy + ki*iy + kd * ddy) #这里取正负方向
+                        red_angle_x = red_angle_x - (kp*dx + ki*ix + kd * ddx)
+                        red_angle_y = red_angle_y + (kp*dy + ki*iy + kd * ddy) #这里取正负方向
 
                         prev_error_x = dx
                         prev_error_y = dy
 
-                        if angle_x < limit[0]: 
-                            angle_x = limit[0]
+                        if red_angle_x < limit[0]: 
+                            red_angle_x = limit[0]
                             
-                        if angle_y > limit[1]:
-                            angle_y = limit[1]
+                        if red_angle_y > limit[1]:
+                            red_angle_y = limit[1]
                                         
-                        servo.rotate_angle(0, angle_x)
-                        servo.rotate_angle(3, angle_y)
+                        servo.rotate_angle(0, red_angle_x)
+                        servo.rotate_angle(3, red_angle_y)
 
                     else:
                         # time.sleep(0.5) 
@@ -239,7 +241,10 @@ class ThreadedCamera(object):
 
             if green_point != [-1,-1] and red_point != [-1,-1] and grn_track_switch:
                 print(f"打开控制 grn_ctrl: {green_point}")
-                # grn_ctrl(red_point, green_point)
+                try:
+                    grn_ctrl(red_point, green_point)
+                except Exception as e:
+                    print(f"无法启动绿色控制: {e}")
 
         return processed_frame
 
@@ -272,8 +277,9 @@ def red_flash(pin, times):
 def grn_ctrl(red_point, green_point):
 
     global g_ix, g_iy, g_prev_error_x, g_prev_error_y
+    global grn_angle_x, grn_angle_y
 
-    kp = 0.005
+    kp = 0.01
     ki = 0 #.0000001
     kd = 0
 
@@ -288,7 +294,7 @@ def grn_ctrl(red_point, green_point):
             dy = y - green_point[5]
 
             print(f"绿点 dx: {dx}, dy: {dy}")
-            print(f"绿点舵机角度: {angle_x}, {angle_y}")
+            print(f"绿点舵机角度: {grn_angle_x}, {grn_angle_y}")
 
             if abs(dx) > tolerance or abs(dy) > tolerance:
 
@@ -298,20 +304,20 @@ def grn_ctrl(red_point, green_point):
                 ddx = dx - g_prev_error_x
                 ddy = dy - g_prev_error_y
 
-                angle_x = angle_x - (kp*dx + ki*ix + kd * ddx)
-                angle_y = angle_y + (kp*dy + ki*iy + kd * ddy) #这里取正负方向
+                grn_angle_x = grn_angle_x - (kp*dx + ki*ix + kd * ddx)
+                grn_angle_y = grn_angle_y + (kp*dy + ki*iy + kd * ddy) #这里取正负方向
 
                 g_prev_error_x = dx
                 g_prev_error_y = dy
 
-                if angle_x < limit[0]: 
-                    angle_x = limit[0]
+                if grn_angle_x < limit[0]: 
+                    grn_angle_x = limit[0]
                     
-                if angle_y > limit[1]:
-                    angle_y = limit[1]
+                if grn_angle_y > limit[1]:
+                    grn_angle_y = limit[1]
                                 
-                servo.rotate_angle(4, angle_x)
-                servo.rotate_angle(7, angle_y)
+                servo.rotate_angle(4, grn_angle_x)
+                servo.rotate_angle(7, grn_angle_y)
 
             else:
                 print("完成追踪")      
@@ -334,7 +340,7 @@ def video_feed():
 # 定义按键监听函数
 def key_listener():
     def on_press(event):
-        global servo_on, angle_y, angle_x, ctrl_speed, track_point, detect_switch, out_or_in
+        global servo_on, red_angle_y, red_angle_x, ctrl_speed, track_point, detect_switch, out_or_in
         global grn_track_switch, red_track_switch
         print(event.name)
         if event.event_type == keyboard.KEY_DOWN:
@@ -389,32 +395,32 @@ def key_listener():
             
 
             elif event.name == 'a':
-                angle_x += ctrl_speed
-                servo.rotate_angle(0, angle_x) 
-                print(f"{angle_x} <-")
+                red_angle_x += ctrl_speed
+                servo.rotate_angle(0, red_angle_x) 
+                print(f"{red_angle_x} <-")
 
             elif event.name == 'd':
                 
-                angle_x -= ctrl_speed
-                servo.rotate_angle(0, angle_x)
-                print(f"{angle_x} ->")
+                red_angle_x -= ctrl_speed
+                servo.rotate_angle(0, red_angle_x)
+                print(f"{red_angle_x} ->")
 
             elif event.name == 'w':
                 
-                angle_y -= ctrl_speed
-                servo.rotate_angle(3, angle_y) 
-                print(f"{angle_y} A")
+                red_angle_y -= ctrl_speed
+                servo.rotate_angle(3, red_angle_y) 
+                print(f"{red_angle_y} A")
 
             elif event.name == 's':
                 
-                angle_y += ctrl_speed
-                servo.rotate_angle(3, angle_y) 
-                print(f"{angle_y} V")
+                red_angle_y += ctrl_speed
+                servo.rotate_angle(3, red_angle_y) 
+                print(f"{red_angle_y} V")
 
             elif event.name == 'r':
                 servo.reset()
-                angle_y = 90
-                angle_x = 90
+                red_angle_y = 90
+                red_angle_x = 90
 
                 print("重置位置")
 
