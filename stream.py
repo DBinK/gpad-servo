@@ -20,17 +20,17 @@ new_vertices = []
 vertices = []
 red_point, green_point = [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]
 
-kp = 0.025
+kp = 0.02
 ki = 0.0000001
 kd = 0.02
 line_seg_num = 10   # 线段分段段数 (>=1)
 tolerance    = 8   # 到达目标点误差允许范围
 
-""" kp = 0.025
-ki = 0.0000001
-kd = 0.02
-line_seg_num = 10   # 线段分段段数 (>=1)
-tolerance    = 8   # 到达目标点误差允许范围 """
+"""    kp = 0.02
+    ki = 0.0000001
+    kd = 0.02
+    line_seg_num = 10   # 线段分段段数 (>=1)
+    tolerance    = 8   # 到达目标点误差允许范围 """
 
 # MG995
 """ kp = 0.02
@@ -52,7 +52,7 @@ ctrl_speed = 0.5
 track_point  = 0
 track_done   = 0
 red_track_switch = 0
-green_track_switch = 0
+grn_track_switch = 0
 point_num    = 0
 
 detect_switch = 1
@@ -87,7 +87,7 @@ class ThreadedCamera(object):
         global vertices, angle_x, angle_y, ctrl_speed, track_point, track_done
         global ix, iy, prev_error_x, prev_error_y, kp, ki, kd
         global point_num, line_seg_num, detect_switch, tolerance
-        global new_vertices, red_point, green_point, red_track_switch, green_track_switch
+        global new_vertices, red_point, green_point, red_track_switch, grn_track_switch
 
         processed_frame = frame.copy()
 
@@ -135,9 +135,16 @@ class ThreadedCamera(object):
             if out_or_in == 0:
                 rate = (500/600)
 
+                kp = 0.02
+                ki = 0.0000001
+                kd = 0.02
+                line_seg_num = 10   # 线段分段段数 (>=1)
+                tolerance    = 8   # 到达目标点误差允许范围
+
             elif out_or_in == 1:
                 rate = (276/297)
-                kp = 0.008
+
+                kp = 0.005
                 ki = 0 #.0000001
                 kd = 0.02
                 line_seg_num = 2   # 线段分段段数 (>=1)
@@ -216,6 +223,8 @@ class ThreadedCamera(object):
                         else:
                             point_num = 0
 
+                            red_flash(29, 3)
+
                             if track_point == 4 and track_done == 1:
                                 track_point = 1
                                 track_done = 0
@@ -228,7 +237,7 @@ class ThreadedCamera(object):
                 except Exception as e:
                     print(f"无法启动舵机跟踪: {e}")
 
-            if green_point != [-1,-1] and red_point != [-1,-1] and green_track_switch:
+            if green_point != [-1,-1] and red_point != [-1,-1] and grn_track_switch:
                 print(f"打开控制 grn_ctrl: {green_point}")
                 # grn_ctrl(red_point, green_point)
 
@@ -256,7 +265,7 @@ def red_flash(pin, times):
     pin_str = str(pin)
     for i in range(0, times*2):
         subprocess.call(['gpio', 'toggle', pin_str])
-        time.sleep(0.2)
+        time.sleep(0.1)
         if i == times*2:
             break
 
@@ -325,7 +334,8 @@ def video_feed():
 # 定义按键监听函数
 def key_listener():
     def on_press(event):
-        global servo_on, angle_y, angle_x, ctrl_speed, track_point, red_track_switch, detect_switch, out_or_in
+        global servo_on, angle_y, angle_x, ctrl_speed, track_point, detect_switch, out_or_in
+        global grn_track_switch, red_track_switch
         print(event.name)
         if event.event_type == keyboard.KEY_DOWN:
             #time.sleep(0.5)   # 消除抖动
@@ -339,15 +349,25 @@ def key_listener():
                     servo_on = 1
                     print("恢复控制")
 
-            if event.name == 'p':
+            if event.name == 'f':
                 if red_track_switch:
                     red_track_switch = 0
-                    detect_switch = 1
-                    print("暂停红点的追踪")
+                    #detect_switch = 1
+                    print("暂停 红点 的追踪")
                 else:
                     red_track_switch = 1
-                    detect_switch = 0
-                    print("暂停红点的追踪")
+                    #detect_switch = 0
+                    print("恢复 红点 的追踪")
+
+            if event.name == 'g':
+                if grn_track_switch:
+                    grn_track_switch = 0
+                    #detect_switch = 1
+                    print("暂停 绿点 的追踪")
+                else:
+                    grn_track_switch = 1
+                    #detect_switch = 0
+                    print("恢复 绿点 的追踪")
 
             if event.name == 'o':
                 if detect_switch:
