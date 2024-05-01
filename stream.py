@@ -286,7 +286,7 @@ def grn_ctrl(red_point, green_point):
     x = red_point[4]
     y = red_point[5]
 
-    if green_point != [-1,-1] and red_track_switch:
+    if green_point != [-1,-1]:
         try: # 启动 PD 控制算法
             limit = [60, 120]
 
@@ -320,8 +320,8 @@ def grn_ctrl(red_point, green_point):
                 servo.rotate_angle(7, grn_angle_y)
 
             else:
-                print("完成追踪")      
-                time.sleep(0.5) 
+                red_flash(33, 3)
+                print("完成追踪")
         
 
         except Exception as e:
