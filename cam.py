@@ -179,8 +179,8 @@ def roi_cut(image, vertices):
     return masked_image
 
 def find_point(image):
-    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     def find_max_contours(mask):
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -218,9 +218,20 @@ def find_point(image):
         mask = cv2.inRange(hsv, lower, upper)
 
         return find_max_contours(mask)
+    
+    def find_yellow_point(hsv):
+        lower = np.array([26, 43, 46])
+        upper = np.array([34, 255, 255])
+        mask = cv2.inRange(hsv, lower, upper)
+        return find_max_contours(mask)
 
     red_point = find_red_point(hsv)
     green_point = find_green_point(hsv)
+
+    if red_point[0] == 0 or green_point[0] == 0:
+        red_point   = find_yellow_point(hsv)
+        green_point = find_yellow_point(hsv)
+        print("yellow")
 
     return red_point, green_point
 
