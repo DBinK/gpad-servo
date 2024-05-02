@@ -61,6 +61,8 @@ detect_switch = 1
 
 out_or_in = 0  # 0: 外框, 1: 内框
 
+
+
 class ThreadedCamera(object):
     def __init__(self, url):
         self.frame = None
@@ -138,7 +140,7 @@ class ThreadedCamera(object):
                 rate = (500/600)
 
                 kp = 0.02
-                ki = 0.0000001
+                ki = 0 #.0000001
                 kd = 0.02
                 line_seg_num = 10   # 线段分段段数 (>=1)
                 tolerance    = 8   # 到达目标点误差允许范围
@@ -225,7 +227,18 @@ class ThreadedCamera(object):
                         else:
                             point_num = 0
 
-                            red_flash(29, 3)
+                            def red_beep():
+                                
+                                subprocess.call(['gpio', 'mode', '29', 'out'])
+                                subprocess.call(['gpio', 'pwm', '29', '500', '1000'])
+                                time.sleep(0.3)
+                                subprocess.call(['gpio', 'pwm', '29', '500', '2000'])
+                                time.sleep(0.3)
+                                subprocess.call(['gpio', 'mode', '29', 'off'])
+
+                            led_thread = Thread(target=red_beep)
+                            led_thread.start()
+                        
 
                             if track_point == 4 and track_done == 1:
                                 track_point = 1
@@ -266,22 +279,16 @@ class ThreadedCamera(object):
         cv2.waitKey(self.FPS_MS)
         
 
-def red_flash(pin, times):
-    pin_str = str(pin)
-    for i in range(0, times*2):
-        subprocess.call(['gpio', 'toggle', pin_str])
-        time.sleep(0.1)
-        if i == times*2:
-            break
-
 def grn_ctrl(red_point, green_point):
 
     global g_ix, g_iy, g_prev_error_x, g_prev_error_y
     global grn_angle_x, grn_angle_y
 
-    kp = 0.01
+    kp = 0.02
     ki = 0 #.0000001
-    kd = 0
+    kd = 0.01
+
+    tolerance = 10  # 追踪误差阈值
 
     x = red_point[4]
     y = red_point[5]
@@ -320,7 +327,18 @@ def grn_ctrl(red_point, green_point):
                 servo.rotate_angle(7, grn_angle_y)
 
             else:
-                red_flash(33, 3)
+                def grn_beep():
+                                
+                    subprocess.call(['gpio', 'mode', '29', 'out'])
+                    subprocess.call(['gpio', 'pwm', '29', '500', '500'])
+                    time.sleep(0.1)
+                    subprocess.call(['gpio', 'pwm', '29', '500', '500'])
+                    time.sleep(0.1)
+                    subprocess.call(['gpio', 'mode', '29', 'off'])
+
+                led_thread = Thread(target=grn_beep)
+                led_thread.start()
+
                 print("完成追踪")
         
 
@@ -341,7 +359,8 @@ def video_feed():
 def key_listener():
     def on_press(event):
         global servo_on, red_angle_y, red_angle_x, ctrl_speed, track_point, detect_switch, out_or_in
-        global grn_track_switch, red_track_switch
+        global grn_track_switch, red_track_switch, grn_angle_x, grn_angle_y, point_num
+
         print(event.name)
         if event.event_type == keyboard.KEY_DOWN:
             #time.sleep(0.5)   # 消除抖动
@@ -378,10 +397,12 @@ def key_listener():
             if event.name == 'o':
                 if detect_switch:
                     detect_switch = 0
-                    print("暂停图像检测")
+                    print("暂停 矩形检测")
                 else:
                     detect_switch = 1
-                    print("暂停图像检测")
+                    red_track_switch = 0
+                    grn_track_switch = 0
+                    print("恢复 矩形检测")
 
             if event.name == 'i':
                 if out_or_in == 1:
@@ -421,6 +442,13 @@ def key_listener():
                 servo.reset()
                 red_angle_y = 90
                 red_angle_x = 90
+                grn_angle_y = 90
+                grn_angle_x = 90
+
+                detect_switch = 1
+                red_track_switch = 0
+                grn_track_switch = 0
+                point_num = 0
 
                 print("重置位置")
 
@@ -433,18 +461,22 @@ def key_listener():
             elif event.name == '1':
                 track_point = 1
                 red_track_switch = 1
+                point_num = 0
                 print("追踪1号点")
             
             elif event.name == '2':
                 track_point = 2
+                point_num = 0
                 print("追踪2号点")
 
             elif event.name == '3':
                 track_point = 3
+                point_num = 0
                 print("追踪3号点")
 
             elif event.name == '4':
                 track_point = 4
+                point_num = 0
                 print("追踪4号点")
 
     
