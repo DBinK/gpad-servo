@@ -22,24 +22,30 @@ new_vertices = []
 vertices = []
 red_point, green_point = [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]
 
-kp = 0.02
-ki = 0.0000001
-kd = 0.02
+r_kp = 0.02
+r_ki = 0.0000001
+r_kd = 0.02
 line_seg_num = 10   # 线段分段段数 (>=1)
-tolerance    = 8   # 到达目标点误差允许范围
+r_tolerance    = 8   # 到达目标点误差允许范围
 
-"""    kp = 0.02
-    ki = 0.0000001
-    kd = 0.02
+g_kp = 0.02
+g_ki = 0 #.0000001
+g_kd = 0.01
+
+g_tolerance = 10  # 追踪误差阈值
+
+"""    r_kp = 0.02
+    r_ki = 0.0000001
+    r_kd = 0.02
     line_seg_num = 10   # 线段分段段数 (>=1)
-    tolerance    = 8   # 到达目标点误差允许范围 """
+    r_tolerance    = 8   # 到达目标点误差允许范围 """
 
 # MG995
-""" kp = 0.02
-ki = 0.0000001
-kd = 0.02
+""" r_kp = 0.02
+r_ki = 0.0000001
+r_kd = 0.02
 line_seg_num = 5   # 线段分段段数 (>=1)
-tolerance    = 8   # 到达目标点误差允许范围 """
+r_tolerance    = 8   # 到达目标点误差允许范围 """
 
 # PID 初始化
 prev_error_x, prev_error_y = 0, 0
@@ -89,9 +95,10 @@ class ThreadedCamera(object):
     def process_frame_outside(self, frame):
         
         global vertices, red_angle_x, red_angle_y, ctrl_speed, track_point, track_done
-        global ix, iy, prev_error_x, prev_error_y, kp, ki, kd
-        global point_num, line_seg_num, detect_switch, tolerance
+        global ix, iy, prev_error_x, prev_error_y, r_kp, r_ki, r_kd
+        global point_num, line_seg_num, detect_switch, r_tolerance
         global new_vertices, red_point, green_point, red_track_switch, grn_track_switch
+        global g_kp, g_ki, g_kd, g_tolerance
 
         processed_frame = frame.copy()
 
@@ -139,20 +146,34 @@ class ThreadedCamera(object):
             if out_or_in == 0:
                 rate = (500/600)
 
-                kp = 0.02
-                ki = 0 #.0000001
-                kd = 0.02
+                r_kp = 0.02
+                r_ki = 0 #.0000001
+                r_kd = 0.02
                 line_seg_num = 10   # 线段分段段数 (>=1)
-                tolerance    = 8   # 到达目标点误差允许范围
+                r_tolerance    = 8   # 到达目标点误差允许范围
+
+                g_kp = 0.02
+                g_ki = 0 #.0000001
+                g_kd = 0.01
+
+                g_tolerance = 10  # 追踪误差阈值
+
 
             elif out_or_in == 1:
                 rate = (276/297)
 
-                kp = 0.005
-                ki = 0 #.0000001
-                kd = 0.02
+                r_kp = 0.005
+                r_ki = 0 #.0000001
+                r_kd = 0.02
                 line_seg_num = 2   # 线段分段段数 (>=1)
-                tolerance    = 10   # 到达目标点误差允许范围
+                r_tolerance    = 10   # 到达目标点误差允许范围
+
+                g_kp = 0.005
+                g_ki = 0 #.0000001
+                g_kd = 0.01
+
+                g_tolerance = 10  # 追踪误差阈值
+
 
             processed_frame, new_vertices = cam.draw_contour_and_vertices(processed_frame, vertices, rate) # 外框与内框宽度之比 
 
@@ -192,7 +213,7 @@ class ThreadedCamera(object):
                     print(f"dx: {dx}, dy: {dy}")
                     print(f"红点舵机角度: {red_angle_x}, {red_angle_y}")
 
-                    if abs(dx) > tolerance or abs(dy) > tolerance:
+                    if abs(dx) > r_tolerance or abs(dy) > r_tolerance:
                         track_done = 0
 
                         ix = ix + dx
@@ -201,8 +222,8 @@ class ThreadedCamera(object):
                         ddx = dx - prev_error_x
                         ddy = dy - prev_error_y
 
-                        red_angle_x = red_angle_x - (kp*dx + ki*ix + kd * ddx)
-                        red_angle_y = red_angle_y + (kp*dy + ki*iy + kd * ddy) #这里取正负方向
+                        red_angle_x = red_angle_x - (r_kp*dx + r_ki*ix + r_kd * ddx)
+                        red_angle_y = red_angle_y + (r_kp*dy + r_ki*iy + r_kd * ddy) #这里取正负方向
 
                         prev_error_x = dx
                         prev_error_y = dy
@@ -283,12 +304,13 @@ def grn_ctrl(red_point, green_point):
 
     global g_ix, g_iy, g_prev_error_x, g_prev_error_y
     global grn_angle_x, grn_angle_y
+    global g_kp, g_ki, g_kd, g_tolerance
 
-    kp = 0.02
-    ki = 0 #.0000001
-    kd = 0.01
+    g_kp = 0.02
+    g_ki = 0 #.0000001
+    g_kd = 0.01
 
-    tolerance = 10  # 追踪误差阈值
+    g_tolerance = 10  # 追踪误差阈值
 
     x = red_point[4]
     y = red_point[5]
@@ -303,7 +325,7 @@ def grn_ctrl(red_point, green_point):
             print(f"绿点 dx: {dx}, dy: {dy}")
             print(f"绿点舵机角度: {grn_angle_x}, {grn_angle_y}")
 
-            if abs(dx) > tolerance or abs(dy) > tolerance:
+            if abs(dx) > r_tolerance or abs(dy) > r_tolerance:
 
                 ix = g_ix + dx
                 iy = g_iy + dy
@@ -311,8 +333,8 @@ def grn_ctrl(red_point, green_point):
                 ddx = dx - g_prev_error_x
                 ddy = dy - g_prev_error_y
 
-                grn_angle_x = grn_angle_x - (kp*dx + ki*ix + kd * ddx)
-                grn_angle_y = grn_angle_y + (kp*dy + ki*iy + kd * ddy) #这里取正负方向
+                grn_angle_x = grn_angle_x - (r_kp*dx + r_ki*ix + r_kd * ddx)
+                grn_angle_y = grn_angle_y + (r_kp*dy + r_ki*iy + r_kd * ddy) #这里取正负方向
 
                 g_prev_error_x = dx
                 g_prev_error_y = dy
@@ -445,7 +467,7 @@ def key_listener():
                 grn_angle_y = 90
                 grn_angle_x = 90
 
-                detect_switch = 1
+                #detect_switch = 1
                 red_track_switch = 0
                 grn_track_switch = 0
                 point_num = 0
