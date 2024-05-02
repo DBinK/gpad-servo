@@ -224,14 +224,27 @@ def find_point(image):
         upper = np.array([34, 255, 255])
         mask = cv2.inRange(hsv, lower, upper)
         return find_max_contours(mask)
+    
+    def find_white_point(hsv):
+        lower = np.array([0, 0, 200])
+        upper = np.array([180, 30, 255])
+        mask = cv2.inRange(hsv, lower, upper)
+        return find_max_contours(mask)
 
     red_point = find_red_point(hsv)
     green_point = find_green_point(hsv)
 
     if red_point[0] == 0 or green_point[0] == 0:
-        red_point   = find_yellow_point(hsv)
-        green_point = find_yellow_point(hsv)
-        print("yellow")
+        yellow_point = find_yellow_point(hsv)
+        red_point    = yellow_point
+        green_point  = yellow_point
+        print("\n红绿光重叠, 找黄光\n")
+
+        if yellow_point[0] == 0:
+            white_point = find_white_point(hsv)
+            red_point   = white_point
+            green_point = white_point
+            print("\n黄光找不到, 找白光\n")
 
     return red_point, green_point
 
