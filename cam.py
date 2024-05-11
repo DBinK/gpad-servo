@@ -369,8 +369,8 @@ def persp_trans(img, vertices):
     # 返回变换后的图像及变换矩阵
     return M, inv_M
 
-def draw_warped_image(img, M, inv_M):
-    
+def draw_warped_image(img, M, inv_M):    # 用于检查变换效果
+
     height, width = img.shape[:2]  # 获取图像的高度和宽度
 
     # 应用透视变换到图像上
@@ -383,6 +383,14 @@ def draw_warped_image(img, M, inv_M):
 
 
 def shrink_rectangle_new(img, scale):
+    """
+    参数:
+    img: 一个数组，代表图像
+    scale: 缩小的比例因子，表示新矩形的大小是原矩形大小的scale倍。
+
+    返回值:
+    返回一个类型为numpy.int32的二维数组，包含四个点的坐标，这四个点分别代表缩小后矩形的四个顶点。
+    """
 
     height, width = img.shape[:2]
 
@@ -411,6 +419,16 @@ def shrink_rectangle_new(img, scale):
 
 
 def inv_trans_vertices(small_vertices, inv_M):
+    """
+    反变换顶点集合
+    
+    参数:
+    small_vertices: 一个二维数组，代表待变换的顶点集合，每个顶点为2D坐标。
+    inv_M: 一个4x4的矩阵，代表待应用的逆变换矩阵。
+    
+    返回值:
+    一个二维数组，表示应用逆变换后的顶点集合，顶点仍为2D坐标，但取整至最接近的整数。
+    """
     
     vertices_array = np.array(small_vertices, dtype=np.float32)
     vertices_homo = np.concatenate([vertices_array, np.ones((vertices_array.shape[0], 1))], axis=1)
@@ -428,28 +446,38 @@ img = None
 
 if __name__ == "__main__":
     print("开始")
-    #img = cv2.imread("img/rg.jpg")
     
+    # 读取图像
     img = cv2.imread("img/rgb.jpg")
+    
+    # 预处理图像，获取轮廓
     contours = preprocess_image(img)
 
+    # 如果轮廓不为空，则寻找具有最大周长的矩形
     if contours is not None:
         vertices = find_max_perimeter_contour(contours, 10090*4, 200*4)
         
-
+    # 如果找到了轮廓的顶点，则进行ROI切割，并寻找红点和绿点
     if vertices is not None:
-
-        #print(f"四个顶点坐标: {vertices}")
+        
+        # 根据顶点进行ROI区域切割
         roi_img = roi_cut(img, vertices)
+        
+        # 在ROI图像中寻找红点和绿点
         red_point, green_point = find_point(roi_img)
+        
+        # 如果找到红点，则在原图上标注红点
         if red_point is not None:
             draw_point(img, red_point, color = 'red ')
+        
+        # 如果找到绿点，则在原图上标注绿点
         if green_point is not None:
             draw_point(img, green_point, color = 'green ')
 
-        img, _ = draw_contour_and_vertices(img, vertices, (5/6)) # (0.5/0.6)  
+        # 在原图上绘制轮廓和顶点
+        img, _ = draw_contour_and_vertices(img, vertices, (5/6))  # 绘制轮廓和顶点，调整比例因子
 
-    # 显示的图像
+    # 显示处理后的图像，并保存
     cv2.imshow("final", img)
     cv2.imwrite("../out/x-out.jpg", img)
     cv2.waitKey(0)
