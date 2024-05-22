@@ -234,7 +234,7 @@ def find_point(image):
     red_point = find_red_point(hsv)
     green_point = find_green_point(hsv)
 
-    if red_point[0] == 0 or green_point[0] == 0:
+    if red_point[0] == 0 and green_point[0] == 0:
         yellow_point = find_yellow_point(hsv)
         red_point    = yellow_point
         green_point  = yellow_point

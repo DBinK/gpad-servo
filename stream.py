@@ -76,7 +76,7 @@ class ThreadedCamera(object):
         self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 5)  # 设置最大缓冲区大小
 
         # 设定帧率
-        self.FPS = 1 / 60
+        self.FPS = 1 / 300
         self.FPS_MS = int(self.FPS * 1000)
 
         # 启动帧检索线程
@@ -143,23 +143,23 @@ class ThreadedCamera(object):
             else:
                 green_point = [-1,-1]    
 
-            if out_or_in == 0:
+            if out_or_in == 0:    # 外框配置
                 rate = (500/600)
 
                 r_kp = 0.02
                 r_ki = 0 #.0000001
                 r_kd = 0.02
-                line_seg_num = 10   # 线段分段段数 (>=1)
-                r_tolerance    = 8   # 到达目标点误差允许范围
+                line_seg_num = 8  # 线段分段段数 (>=1)
+                r_tolerance  = 8  # 到达目标点误差允许范围
 
-                g_kp = 0.02
+                g_kp = 0.015
                 g_ki = 0 #.0000001
-                g_kd = 0.01
+                g_kd = 0.02
 
                 g_tolerance = 10  # 追踪误差阈值
 
 
-            elif out_or_in == 1:
+            elif out_or_in == 1:  # 内框配置
                 rate = (276/297)
 
                 r_kp = 0.005
@@ -305,12 +305,6 @@ def grn_ctrl(red_point, green_point):
     global g_ix, g_iy, g_prev_error_x, g_prev_error_y
     global grn_angle_x, grn_angle_y
     global g_kp, g_ki, g_kd, g_tolerance
-
-    g_kp = 0.02
-    g_ki = 0 #.0000001
-    g_kd = 0.01
-
-    g_tolerance = 10  # 追踪误差阈值
 
     x = red_point[4]
     y = red_point[5]
@@ -482,23 +476,26 @@ def key_listener():
             
             elif event.name == '1':
                 track_point = 1
-                red_track_switch = 1
                 point_num = 0
+                red_track_switch = 1
                 print("追踪1号点")
             
             elif event.name == '2':
                 track_point = 2
                 point_num = 0
+                red_track_switch = 1
                 print("追踪2号点")
 
             elif event.name == '3':
                 track_point = 3
                 point_num = 0
+                red_track_switch = 1
                 print("追踪3号点")
 
             elif event.name == '4':
                 track_point = 4
                 point_num = 0
+                red_track_switch = 1
                 print("追踪4号点")
 
     
