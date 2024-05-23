@@ -89,17 +89,36 @@ def draw_line_points(image, small_vertices, line_seg_num):
 
 def pre_cut(image):
     # 指定裁剪区域的坐标和尺寸
-    """ x = 175  # 左上角x坐标
+    x = 175  # 左上角x坐标
     y = 0  # 左上角y坐标
     w = 940  # 宽度
-    h = 660  # 高度 """
+    h = 660  # 高度
     
-    x = 162  # 左上角x坐标
-    y = 20  # 左上角y坐标
-    w = 854  # 宽度
-    h = 480  # 高度
+    # x = 162  # 左上角x坐标
+    # y = 20  # 左上角y坐标
+    # w = 854  # 宽度
+    # h = 480  # 高度  
 
     return image[y:y+h, x:x+w]
+
+    # x = 320  # 左上角x坐标
+    # y = 40  # 左上角y坐标
+    # w = 1708  # 宽度
+    # h = 960  # 高度
+
+    # image = image[y:y+h, x:x+w]
+
+    # # 缩放倍数
+    # scale_percent = 0.5  # 缩小为原来的一半
+
+    # # 计算缩放后的宽度和高度
+    # width = int(image.shape[1] * scale_percent)
+    # height = int(image.shape[0] * scale_percent)
+
+    # # 缩放图像
+    # resized_image = cv2.resize(image, (width, height))
+
+    # return resized_image
 
 def preprocess_image(img):
 

@@ -152,9 +152,9 @@ class ThreadedCamera(object):
                 line_seg_num = 3  # 线段分段段数 (>=1)
                 r_tolerance  = 8  # 到达目标点误差允许范围
 
-                g_kp = 0.015
+                g_kp = 0.010
                 g_ki = 0 #.0000001
-                g_kd = 0.02
+                g_kd = 0.002
 
                 g_tolerance = 10  # 追踪误差阈值
 
@@ -168,9 +168,9 @@ class ThreadedCamera(object):
                 line_seg_num = 1   # 线段分段段数 (>=1)
                 r_tolerance    = 10   # 到达目标点误差允许范围
 
-                g_kp = 15
+                g_kp = 0.007
                 g_ki = 0 #.0000001
-                g_kd = 0 #0.01
+                g_kd = 0.0 #0.01
 
                 g_tolerance = 10  # 追踪误差阈值
 
