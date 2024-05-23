@@ -76,7 +76,7 @@ class ThreadedCamera(object):
         self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 5)  # 设置最大缓冲区大小
 
         # 设定帧率
-        self.FPS = 1 / 300
+        self.FPS = 1 / 240
         self.FPS_MS = int(self.FPS * 1000)
 
         # 启动帧检索线程
@@ -146,10 +146,10 @@ class ThreadedCamera(object):
             if out_or_in == 0:    # 外框配置
                 rate = (500/600)
 
-                r_kp = 0.02
+                r_kp = 0.015
                 r_ki = 0 #.0000001
                 r_kd = 0.02
-                line_seg_num = 8  # 线段分段段数 (>=1)
+                line_seg_num = 5  # 线段分段段数 (>=1)
                 r_tolerance  = 8  # 到达目标点误差允许范围
 
                 g_kp = 0.015
@@ -515,7 +515,7 @@ if __name__ == '__main__':
             # 320x240 640x480 960x720 1280x720 1920x1080
             #url = 'http://192.168.100.44:4747/video?960x720'
             #url = 'rtsp://192.168.100.4:8080/video/h264'
-            url = 'http://192.168.43.1:8080/video/mjpeg'
+            url = 'http://192.168.43.207:8080/video/mjpeg'
             stream = ThreadedCamera(url)
 
             while True:

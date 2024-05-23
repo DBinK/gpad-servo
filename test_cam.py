@@ -1,52 +1,39 @@
 
 import cv2
 import cam
-import scrcpy
-from adbutils import adb
 
-adb.connect("192.168.50.4:38679")
 
-adb_device = adb.device_list()
+img = cv2.imread('img/tt.jpg')
 
-client = scrcpy.Client(device=adb_device[0], bitrate=1000000, max_fps=60, max_width=1080, connection_timeout=3000)
+contours = cam.preprocess_image(img)
 
-# You can also pass an ADBClient instance to it
-""" adb.connect("127.0.0.1:5555")
-client = scrcpy.Client(device=adb.device_list()[0]) """
-def on_frame(frame):
-    # If you set non-blocking (default) in constructor, the frame event receiver 
-    # may receive None to avoid blocking event.
-    if frame is not None:
+# 从输入图像获取4个角点
+if contours is not None:
+    vertices = cam.find_max_perimeter_contour(contours, 10090*4, 200*4)
+    print(vertices)
 
-        processed_frame = frame.copy()
+# 透视变换为矩形，并得到变换矩阵
+if vertices is not None:
+    M, inv_M = cam.persp_trans(img, vertices)
 
-        contours = cam.preprocess_image(processed_frame)
+# 从矩形获取所需坐标
+    small_vertices = cam.shrink_rectangle_new(img, (500/600))
 
-        if contours is not None:
-            vertices = cam.find_max_perimeter_contour(contours, 999999999, 100*4) # 最大,最小允许周长(mm)
+    # 获取的坐标乘以矩阵的逆, 得到绝对符合透视的图像
+    warped_image, inv_warped_image = cam.draw_warped_image(img, M, inv_M)
 
-        if vertices is not None:
-            #print(f"四个顶点坐标:\n {vertices}")
+    cv2.namedWindow("warped_image", cv2.WINDOW_NORMAL)
+    cv2.imshow("warped_image", warped_image)
 
-            roi_frame = cam.roi_cut(processed_frame, vertices)
-            red_point,green_point = cam.find_point(roi_frame)
+    cv2.namedWindow("inv_warped_image", cv2.WINDOW_NORMAL)
+    cv2.imshow("inv_warped_image", inv_warped_image)
 
-            if red_point[0] != 0:
-                processed_frame = cam.draw_point(processed_frame,red_point)
-            else:
-                red_point = [-1,-1]
-                
-            if green_point[0] != 0:
-                processed_frame = cam.draw_point(processed_frame,green_point)
-            else:
-                green_point = [-1,-1]    
+# 显示处理后的图像，并保存
+cv2.namedWindow("image", cv2.WINDOW_NORMAL)
+cv2.imshow("image", img)
 
-            processed_frame, new_vertices = cam.draw_contour_and_vertices(processed_frame, vertices, (500/600)) # 外框与内框宽度之比 
-        # frame is an bgr numpy ndarray (cv2' default format)
-        cv2.namedWindow('viz', cv2.WINDOW_NORMAL)
-        cv2.imshow("viz", processed_frame)
-    cv2.waitKey(1)
 
-client.add_listener(scrcpy.EVENT_FRAME, on_frame)
 
-client.start()
+# cv2.imwrite("../out/x-out.jpg", img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
