@@ -93,7 +93,6 @@ def pre_cut(image):
     y = 0  # 左上角y坐标
     w = 940  # 宽度
     h = 660  # 高度 """
-
     
     x = 162  # 左上角x坐标
     y = 20  # 左上角y坐标
@@ -101,6 +100,7 @@ def pre_cut(image):
     h = 480  # 高度
 
     return image[y:y+h, x:x+w]
+
 def preprocess_image(img):
 
     """

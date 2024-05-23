@@ -114,10 +114,10 @@ class ThreadedCamera(object):
 
             elif out_or_in == 1:
                 rate = (276/297)
-                kp = 0.005
+                kp = 0.001
                 ki = 0 #.0000001
-                kd = 0.02
-                line_seg_num = 4   # 线段分段段数 (>=1)
+                kd = 0.0
+                line_seg_num = 3   # 线段分段段数 (>=1)
                 tolerance    = 10   # 到达目标点误差允许范围
 
             processed_frame, new_vertices = cam.draw_contour_and_vertices(processed_frame, vertices, rate) # 外框与内框宽度之比 

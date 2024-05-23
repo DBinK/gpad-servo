@@ -162,15 +162,15 @@ class ThreadedCamera(object):
             elif out_or_in == 1:  # 内框配置
                 rate = (276/297)
 
-                r_kp = 0.005
+                r_kp = 0.0039
                 r_ki = 0 #.0000001
-                r_kd = 0.02
-                line_seg_num = 2   # 线段分段段数 (>=1)
+                r_kd = 0.0030
+                line_seg_num = 1   # 线段分段段数 (>=1)
                 r_tolerance    = 10   # 到达目标点误差允许范围
 
-                g_kp = 0.005
+                g_kp = 15
                 g_ki = 0 #.0000001
-                g_kd = 0.01
+                g_kd = 0 #0.01
 
                 g_tolerance = 10  # 追踪误差阈值
 
@@ -327,8 +327,8 @@ def grn_ctrl(red_point, green_point):
                 ddx = dx - g_prev_error_x
                 ddy = dy - g_prev_error_y
 
-                grn_angle_x = grn_angle_x - (r_kp*dx + r_ki*ix + r_kd * ddx)
-                grn_angle_y = grn_angle_y + (r_kp*dy + r_ki*iy + r_kd * ddy) #这里取正负方向
+                grn_angle_x = grn_angle_x - (g_kp*dx + g_ki*ix + g_kd * ddx)
+                grn_angle_y = grn_angle_y + (g_kp*dy + g_ki*iy + g_kd * ddy) #这里取正负方向
 
                 g_prev_error_x = dx
                 g_prev_error_y = dy
