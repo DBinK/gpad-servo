@@ -166,13 +166,13 @@ class ThreadedCamera(object):
                 r_ki = 0 #.0000001
                 r_kd = 0.0030
                 line_seg_num = 1   # 线段分段段数 (>=1)
-                r_tolerance    = 10   # 到达目标点误差允许范围
+                r_tolerance    = 18   # 到达目标点误差允许范围
 
                 g_kp = 0.007
                 g_ki = 0 #.0000001
-                g_kd = 0.0 #0.01
+                g_kd = 0.0030 #0.01
 
-                g_tolerance = 10  # 追踪误差阈值
+                g_tolerance = 18  # 追踪误差阈值
 
 
             processed_frame, new_vertices = cam.draw_contour_and_vertices(processed_frame, vertices, rate) # 外框与内框宽度之比 
