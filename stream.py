@@ -146,10 +146,10 @@ class ThreadedCamera(object):
             if out_or_in == 0:    # 外框配置
                 rate = (500/600)
 
-                r_kp = 0.015
+                r_kp = 0.013
                 r_ki = 0 #.0000001
-                r_kd = 0.02
-                line_seg_num = 5  # 线段分段段数 (>=1)
+                r_kd = 0.019
+                line_seg_num = 3  # 线段分段段数 (>=1)
                 r_tolerance  = 8  # 到达目标点误差允许范围
 
                 g_kp = 0.015
