@@ -10,10 +10,10 @@ import keyboard
 import numpy as np
 from threading import Thread
 
-import servo_driver
+import servo
 import cam
 
-servo = servo_driver.ServoController()
+servo = servo.ServoController()
 
 red_angle_x, red_angle_y = 90 ,90
 grn_angle_x, grn_angle_y = 90 ,90

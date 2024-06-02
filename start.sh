@@ -1,6 +1,6 @@
 # !/usr/bin/fish
 
-cd /home/pi//gpad-servo
+cd /home/pi/gpad-servo
 
 source .venv/bin/activate.fish
 

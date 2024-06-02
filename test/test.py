@@ -6,10 +6,10 @@ import time
 import keyboard
 from threading import Thread
 
-import servo_driver
+import servo
 import cam
 
-servo = servo_driver.ServoController()
+servo = servo.ServoController()
 
 angle_x, angle_y = 90 ,90
 new_vertices = []

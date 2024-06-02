@@ -1,9 +1,9 @@
 # 定义按键监听函数
 import keyboard
 
-import servo_driver
+import servo
 
-servo = servo_driver.ServoController()
+servo = servo.ServoController()
 
 def key_listener():
     def on_press(event):
