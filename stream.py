@@ -166,7 +166,7 @@ if __name__ == '__main__':
     if platform.system() == 'Linux':
         def generate_frames():     # 远程调试显示用
             url = 'http://192.168.50.4:8080/video/mjpeg'
-            stream = ThreadedCamera(url)
+            stream = ThreadedCamera(0)
 
             while True:
                 frame = stream.frame
