@@ -8,23 +8,17 @@ from loguru import logger
 logger.remove()
 logger.add(sys.stderr, level="DEBUG")  # 输出到stderr（默认是控制台），级别为DEBUG
 
-def roi_cut(image, vertices):
-    mask = np.zeros_like(image)
-    cv2.fillPoly(mask, [vertices], (255, 255, 255))
-    masked_image = cv2.bitwise_and(image, mask)
-
-    return masked_image
-
 
 class QuadDetector:
-    def __init__(self, img, max_perimeter, min_perimeter, scale, min_angle=30):
+    def __init__(self, max_perimeter, min_perimeter, scale, min_angle=30):
         """
         @param img: 图像来源
         @param max_perimeter: 允许的最大周长
         @param min_perimeter: 允许的最小周长
         @param scale: 缩放比例
+        @param min_angle: 允许的最小角度
         """
-        self.img = img.copy()
+        self.img = None
         self.max_perimeter = max_perimeter
         self.min_perimeter = min_perimeter
         self.scale = scale
@@ -97,6 +91,8 @@ class QuadDetector:
                     if all(angle >= self.min_angle for angle in cosines):
                         max_perimeter = perimeter
                         self.vertices = approx.reshape(4, 2)
+                    else:
+                        self.vertices = None
 
         logger.info(f"Found vertices: {self.vertices}")
 
@@ -248,11 +244,14 @@ class QuadDetector:
             logger.info(f"No intersection found.")
             return []
         
-    def detect(self):
+    def detect(self,img):
         """
         对预处理后的图像进行轮廓检测，并返回检测到的轮廓信息。
         """
+        self.img = img.copy()
+
         self.preprocess_image()
+
         vertices       = self.find_max_quad_vertices()
         scale_vertices = self.find_scale_quad_vertices()
         intersection   = self.calculate_intersection()
@@ -261,7 +260,7 @@ class QuadDetector:
     
     def draw(self, img=None):
         if img is None:
-            img = self.img
+            img = self.img.copy()
         """
         在给定的图像上绘制轮廓和顶点坐标。
         """
@@ -305,8 +304,8 @@ class QuadDetector:
 
 
 class PointDetector:
-    def __init__(self, img, vertices=None):
-        self.img = img.copy()
+    def __init__(self, vertices=None):
+        self.img = None
         self.vertices = vertices
 
         self.red_point   = None
@@ -390,12 +389,16 @@ class PointDetector:
                 green_point = white_point
                 print("\n黄光找不到, 找白光\n")
 
+        logger.info(f"red_point: {red_point} | green_point: {green_point}")
+
         return red_point, green_point
     
-    def detect(self):
+    def detect(self, img):
+        self.img = img.copy()
+
         if self.vertices is not None:
             self.img = self.roi_cut(self.vertices)
-            cv2.imshow("roi", self.img)
+            # cv2.imshow("roi", self.img)  # 
             
         self.red_point, self.green_point = self.find_point(self.img)
         
@@ -403,7 +406,7 @@ class PointDetector:
     
     def draw(self, img=None):
         if img is None:
-            img = self.img
+            img = self.img.copy()
         def draw_point(img, point, bgr = ( 0, 255, 255) , color = ' '):
             [x, y, w, h, center_x, center_y] = point
             # 在图像上绘制方框
@@ -426,12 +429,12 @@ if __name__ == '__main__':
     
     img = cv2.imread("img/rgb.jpg")
     
-    quad_detector = QuadDetector(img, 100000, 100, 500/600)
-    vertices, scale_vertices, intersection = quad_detector.detect()
+    quad_detector = QuadDetector(2100, 100, 500/600)
+    vertices, scale_vertices, intersection = quad_detector.detect(img)
     img_ = quad_detector.draw()
 
-    point_detector = PointDetector(img,vertices)
-    red_point, green_point = point_detector.detect()
+    point_detector = PointDetector()
+    red_point, green_point = point_detector.detect(img)
     img_ = point_detector.draw(img_)
 
     cv2.imshow("img", img)
