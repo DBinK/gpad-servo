@@ -305,10 +305,22 @@ class QuadDetector:
 
 
 class PointDetector:
-    def __init__(self, img):
+    def __init__(self, img, vertices=None):
         self.img = img.copy()
-        self.red_point = None
+        self.vertices = vertices
+
+        self.red_point   = None
         self.green_point = None
+
+    def roi_cut(self, vertices):
+        """
+        裁剪图像以获取 ROI 区域。
+        """
+        mask = np.zeros_like(self.img)
+        cv2.fillPoly(mask, [vertices], (255, 255, 255))
+        masked_image = cv2.bitwise_and(self.img, mask)
+
+        return masked_image
 
     @staticmethod
     def find_point(image):
@@ -381,7 +393,12 @@ class PointDetector:
         return red_point, green_point
     
     def detect(self):
+        if self.vertices is not None:
+            self.img = self.roi_cut(self.vertices)
+            cv2.imshow("roi", self.img)
+            
         self.red_point, self.green_point = self.find_point(self.img)
+        
         return self.red_point, self.green_point
     
     def draw(self, img=None):
@@ -413,7 +430,7 @@ if __name__ == '__main__':
     vertices, scale_vertices, intersection = quad_detector.detect()
     img_ = quad_detector.draw()
 
-    point_detector = PointDetector(img)
+    point_detector = PointDetector(img,vertices)
     red_point, green_point = point_detector.detect()
     img_ = point_detector.draw(img_)
 
