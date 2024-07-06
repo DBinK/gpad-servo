@@ -85,7 +85,7 @@ def draw_line_points(image, small_vertices, line_seg_num):
             cv2.circle(image, (int(x), int(y)), 4, (0, 0, 255), -1)
             #print(int(x),int(y))
         #print("----------")
-    return image
+    return image                                                                                                                                                                                                         
 
 def pre_cut(image):
     # 指定裁剪区域的坐标和尺寸

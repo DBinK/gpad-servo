@@ -4,9 +4,6 @@ from flask import Flask, render_template, Response
 import cv2
 import time
 import numpy as np
-from threading import Lock
-
-# 假设cam模块中的函数已经实现，这里保持不变
 import detector
 
 quad_detector = detector.QuadDetector(20100, 100, 500/600)
@@ -14,11 +11,11 @@ point_detector = detector.PointDetector()
 
 class ThreadedCamera(object):
     def __init__(self, url=0):
-        self.frame = None
+        self.frame   = None
         self.capture = cv2.VideoCapture(url)
         self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 5)  # 设置最大缓冲区大小
 
-        self.FPS = 1 / 240
+        self.FPS    = 1 / 240
         self.FPS_MS = int(self.FPS * 1000)
 
         self.thread = threading.Thread(target=self.update, args=())
@@ -43,13 +40,12 @@ class ThreadedCamera(object):
             vertices, scale_vertices, intersection = quad_detector.detect(img)
             img_drawed  = quad_detector.draw()
 
-            red_point, green_point = point_detector.detect(img)
+            red_point, green_point = point_detector.detect(img, quad_detector.vertices)
             img_drawed = point_detector.draw(img_drawed)        
 
         except Exception as e:
             print(f"发生错误: {e}")  
             img_drawed = img  
-
 
         return img_drawed
 
