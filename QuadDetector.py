@@ -8,6 +8,14 @@ from loguru import logger
 logger.remove()
 logger.add(sys.stderr, level="DEBUG")  # 输出到stderr（默认是控制台），级别为DEBUG
 
+def roi_cut(image, vertices):
+    mask = np.zeros_like(image)
+    cv2.fillPoly(mask, [vertices], (255, 255, 255))
+    masked_image = cv2.bitwise_and(image, mask)
+
+    return masked_image
+
+
 class QuadDetector:
     def __init__(self, img, max_perimeter, min_perimeter, scale, min_angle=30):
         """
@@ -137,8 +145,6 @@ class QuadDetector:
             rectangle_vertices[2] = [width, height]
             rectangle_vertices[3] = [width, 0]
 
-            #print (rectangle_vertices)
-
             center_x = width // 2
             center_y = height // 2
 
@@ -148,8 +154,6 @@ class QuadDetector:
                 new_x = int(center_x + (vertex[0] - center_x) * scale)
                 new_y = int(center_y + (vertex[1] - center_y) * scale)
                 small_vertices.append([new_x, new_y])
-
-            #print (small_vertices)
 
             return np.array(small_vertices, dtype=np.int32)
 
@@ -208,7 +212,6 @@ class QuadDetector:
         """
         if vertices is None:
             vertices = self.vertices
-            logger.info(f"calculate_intersection vertices: {self.vertices}")
 
         x1, y1 = vertices[0]
         x2, y2 = vertices[2]
@@ -256,7 +259,9 @@ class QuadDetector:
 
         return vertices, scale_vertices, intersection
     
-    def draw(self):
+    def draw(self, img=None):
+        if img is None:
+            img = self.img
         """
         在给定的图像上绘制轮廓和顶点坐标。
         """
@@ -299,15 +304,118 @@ class QuadDetector:
         return img_drawed
 
 
+class PointDetector:
+    def __init__(self, img):
+        self.img = img.copy()
+        self.red_point = None
+        self.green_point = None
+
+    @staticmethod
+    def find_point(image):
+        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        def find_max_contours(mask):
+            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+            if len(contours) > 0:
+                # 找到最大的轮廓
+                largest_contour = max(contours, key=cv2.contourArea)
+                # 找到最大轮廓的外接矩形
+                x, y, w, h = cv2.boundingRect(largest_contour)  
+                
+                center_x = x + w / 2  # 计算中心点 x 坐标
+                center_y = y + h / 2  # 计算中心点 y 坐标
+
+                point = [x, y, w, h, center_x, center_y]
+                # print(point)
+                return point
+            else:
+                return [0,0,0,0,0,0]
+            
+        def find_red_point(hsv):
+            lower = np.array([0, 100, 100])
+            upper = np.array([10, 255, 255])
+            mask1 = cv2.inRange(hsv, lower, upper)
+
+            lower = np.array([160, 100, 100])
+            upper = np.array([179, 255, 255])
+            mask2 = cv2.inRange(hsv, lower, upper)
+
+            mask = mask1 | mask2
+
+            return find_max_contours(mask)
+        def find_green_point(hsv):
+            # 绿色范围
+            lower = np.array([40, 100, 100])
+            upper = np.array([80, 255, 255])
+            mask = cv2.inRange(hsv, lower, upper)
+
+            return find_max_contours(mask)
+        
+        def find_yellow_point(hsv):
+            lower = np.array([26, 43, 46])
+            upper = np.array([34, 255, 255])
+            mask = cv2.inRange(hsv, lower, upper)
+            return find_max_contours(mask)
+        
+        def find_white_point(hsv):
+            lower = np.array([0, 0, 200])
+            upper = np.array([180, 30, 255])
+            mask = cv2.inRange(hsv, lower, upper)
+            return find_max_contours(mask)
+
+        red_point = find_red_point(hsv)
+        green_point = find_green_point(hsv)
+
+        if red_point[0] == 0 and green_point[0] == 0:
+            yellow_point = find_yellow_point(hsv)
+            red_point    = yellow_point
+            green_point  = yellow_point
+            print("\n红绿光重叠, 找黄光\n")
+
+            if yellow_point[0] == 0:
+                white_point = find_white_point(hsv)
+                red_point   = white_point
+                green_point = white_point
+                print("\n黄光找不到, 找白光\n")
+
+        return red_point, green_point
+    
+    def detect(self):
+        self.red_point, self.green_point = self.find_point(self.img)
+        return self.red_point, self.green_point
+    
+    def draw(self, img=None):
+        if img is None:
+            img = self.img
+        def draw_point(img, point, bgr = ( 0, 255, 255) , color = ' '):
+            [x, y, w, h, center_x, center_y] = point
+            # 在图像上绘制方框
+            cv2.rectangle(img, (x, y), (x + w, y + h), bgr, 1)
+
+            # 绘制坐标
+            text = f"{color} point: ({center_x}, {center_y})"
+            cv2.putText(img, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, bgr, 1)
+
+            return img
+        
+        img_drawed = draw_point(img,   self.red_point,   (0, 255, 255),   "red")
+        img_drawed = draw_point(img_drawed, self.green_point, (0, 255, 255), "green")
+
+        return img_drawed
+
 if __name__ == '__main__':
 
     print("开始")
     
     img = cv2.imread("img/rgb.jpg")
     
-    detector = QuadDetector(img, 100000, 100, 500/600)
-    detector.detect()
-    img_ = detector.draw()
+    quad_detector = QuadDetector(img, 100000, 100, 500/600)
+    vertices, scale_vertices, intersection = quad_detector.detect()
+    img_ = quad_detector.draw()
+
+    point_detector = PointDetector(img)
+    red_point, green_point = point_detector.detect()
+    img_ = point_detector.draw(img_)
 
     cv2.imshow("img", img)
     cv2.imshow("img_", img_)
