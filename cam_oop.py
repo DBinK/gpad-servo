@@ -22,7 +22,9 @@ class QuadDetector:
         self.scale = scale
         self.min_angle = min_angle
 
-        self.vertices = None
+        self.vertices       = None
+        self.scale_vertices = None
+        self.intersection  = None
 
     def preprocess_image(self):
 
@@ -186,26 +188,73 @@ class QuadDetector:
             
             return warped_image, inv_warped_image
         
-        _, inv_M = persp_trans(self.img, self.vertices)  # 获取透视变换矩阵
-            
-        small_vertices = shrink_rectangle_new(self.img, self.scale)  # 缩小矩形
-
+        _, inv_M            = persp_trans(self.img, self.vertices)  # 获取透视变换矩阵
+        small_vertices      = shrink_rectangle_new(self.img, self.scale)  # 缩小矩形
         self.scale_vertices = inv_trans_vertices(small_vertices, inv_M)
 
         logger.info(f"Found scale vertices: {self.scale_vertices}")
 
         return self.scale_vertices
 
+    def calculate_intersection(self,vertices=None):
+        """
+        计算四边形对角线的交点。
+
+        参数:
+        vertices: 一个包含四个顶点坐标的列表, 每个顶点是一个二元组(x, y)。
+
+        返回值:
+        如果存在交点, 返回交点的坐标(x, y)；如果不存在交点, 返回None。
+        """
+        if vertices is None:
+            vertices = self.vertices
+            logger.info(f"calculate_intersection vertices: {self.vertices}")
+
+        x1, y1 = vertices[0]
+        x2, y2 = vertices[2]
+        x3, y3 = vertices[1]
+        x4, y4 = vertices[3]
+
+        dx1, dy1 = x2 - x1, y2 - y1
+        dx2, dy2 = x4 - x3, y4 - y3
+
+        det = dx1 * dy2 - dx2 * dy1
+
+        if det == 0 or (dx1 == 0 and dx2 == 0) or (dy1 == 0 and dy2 == 0):
+            return None
+
+        dx3, dy3 = x1 - x3, y1 - y3
+        det1 = dx1 * dy3 - dx3 * dy1
+        det2 = dx2 * dy3 - dx3 * dy2
+
+        if det1 == 0 or det2 == 0:
+            return None
+
+        s = det1 / det
+        t = det2 / det
+
+        if 0 <= s <= 1 and 0 <= t <= 1:
+            intersection_x = int(x1 + dx1 * t)
+            intersection_y = int(y1 + dy1 * t)
+            self.intersection = [intersection_x, intersection_y]
+
+            logger.info(f"Found intersection: {self.intersection}")
+
+            return intersection_x, intersection_y
+        else:
+            logger.info(f"No intersection found.")
+            return []
         
     def detect(self):
         """
         对预处理后的图像进行轮廓检测，并返回检测到的轮廓信息。
         """
         self.preprocess_image()
-        vertices = self.find_max_quad_vertices()
+        vertices       = self.find_max_quad_vertices()
         scale_vertices = self.find_scale_quad_vertices()
+        intersection   = self.calculate_intersection()
 
-        return vertices, scale_vertices
+        return vertices, scale_vertices, intersection
     
     def draw(self):
         """
@@ -220,6 +269,7 @@ class QuadDetector:
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5, (0, 0, 255), 1, cv2.LINE_AA,
             )
+            return img
 
         def draw_lines_points(img, vertices, bold=2):
             # 绘制轮廓
@@ -244,18 +294,17 @@ class QuadDetector:
 
         img_drawed = draw_lines_points(self.img, self.vertices)
         img_drawed = draw_lines_points(img_drawed, self.scale_vertices)
+        img_drawed = draw_point_text(img_drawed, self.intersection[0], self.intersection[1])
 
         return img_drawed
 
 
 if __name__ == '__main__':
 
-
     print("开始")
     
     img = cv2.imread("img/rgb.jpg")
     
-
     detector = QuadDetector(img, 100000, 100, 500/600)
     detector.detect()
     img_ = detector.draw()
