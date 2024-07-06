@@ -16,7 +16,7 @@ class QuadDetector:
         @param min_perimeter: 允许的最小周长
         @param scale: 缩放比例
         """
-        self.img = img
+        self.img = img.copy()
         self.max_perimeter = max_perimeter
         self.min_perimeter = min_perimeter
         self.scale = scale
@@ -91,6 +91,111 @@ class QuadDetector:
         logger.info(f"Found vertices: {self.vertices}")
 
         return self.vertices
+    
+    def find_scale_quad_vertices(self):
+        """
+        计算按比例缩放后的四边形
+        """
+        def persp_trans(img, vertices):
+            # 对四边形顶点坐标进行排序
+            rect = np.zeros((4, 2), dtype="float32")
+            rect[0] = vertices[0]
+            rect[1] = vertices[3]
+            rect[2] = vertices[2]
+            rect[3] = vertices[1]
+
+            height, width = img.shape[:2]  # 获取图像的高度和宽度
+
+            # 定义目标矩形的顶点坐标，即变换后的图像矩形框
+            dst = np.array([[0, 0], [width - 1, 0], [width - 1, height - 1], [0, height - 1]], dtype="float32")
+
+            # 计算透视变换矩阵
+            M = cv2.getPerspectiveTransform(rect, dst)
+            inv_M = np.linalg.inv(M)
+
+            # 返回变换后的图像及变换矩阵
+            return M, inv_M
+        
+        def shrink_rectangle_new(img, scale):
+            """
+            参数:
+            img: 一个数组，代表图像
+            scale: 缩小的比例因子，表示新矩形的大小是原矩形大小的scale倍。
+
+            返回值:
+            返回一个类型为numpy.int32的二维数组，包含四个点的坐标，这四个点分别代表缩小后矩形的四个顶点。
+            """
+
+            height, width = img.shape[:2]
+
+            rectangle_vertices = [[],[],[],[]]
+            
+            rectangle_vertices[0] = [0, 0]
+            rectangle_vertices[1] = [0, height]
+            rectangle_vertices[2] = [width, height]
+            rectangle_vertices[3] = [width, 0]
+
+            #print (rectangle_vertices)
+
+            center_x = width // 2
+            center_y = height // 2
+
+            small_vertices = []
+
+            for vertex in rectangle_vertices:
+                new_x = int(center_x + (vertex[0] - center_x) * scale)
+                new_y = int(center_y + (vertex[1] - center_y) * scale)
+                small_vertices.append([new_x, new_y])
+
+            #print (small_vertices)
+
+            return np.array(small_vertices, dtype=np.int32)
+
+
+        def inv_trans_vertices(small_vertices, inv_M):
+            """
+            反变换顶点集合
+            
+            参数:
+            small_vertices: 一个二维数组，代表待变换的顶点集合，每个顶点为2D坐标。
+            inv_M: 一个4x4的矩阵，代表待应用的逆变换矩阵。
+            
+            返回值:
+            一个二维数组，表示应用逆变换后的顶点集合，顶点仍为2D坐标，但取整至最接近的整数。
+            """
+            
+            vertices_array = np.array(small_vertices, dtype=np.float32)
+            vertices_homo = np.concatenate([vertices_array, np.ones((vertices_array.shape[0], 1))], axis=1)
+            
+            inv_trans_vertices_homo = np.dot(inv_M, vertices_homo.T).T
+            inv_trans_vertices = inv_trans_vertices_homo[:, :2] / inv_trans_vertices_homo[:, 2, None]
+            
+            inv_trans_vertices_int = inv_trans_vertices.astype(int)
+
+            return inv_trans_vertices_int
+        
+        def draw_warped_image(img, M, inv_M):    # 用于检查变换效果
+
+            height, width = img.shape[:2]  # 获取图像的高度和宽度
+
+            # 应用透视变换到图像上
+            warped_image = cv2.warpPerspective(img, M, (width, height))
+
+            # 应用逆透视变换到图像
+            inv_warped_image = cv2.warpPerspective(warped_image, inv_M,  (width, height))
+            
+            return warped_image, inv_warped_image
+        
+        _, inv_M = persp_trans(self.img, self.vertices)  # 获取透视变换矩阵
+            
+        small_vertices = shrink_rectangle_new(self.img, self.scale)  # 缩小矩形
+
+        self.scale_vertices = inv_trans_vertices(small_vertices, inv_M)
+
+        logger.info(f"Found scale vertices: {self.scale_vertices}")
+
+        return self.scale_vertices
+
         
     def detect(self):
         """
@@ -98,38 +203,50 @@ class QuadDetector:
         """
         self.preprocess_image()
         vertices = self.find_max_quad_vertices()
-        return vertices
+        scale_vertices = self.find_scale_quad_vertices()
+
+        return vertices, scale_vertices
     
     def draw(self):
         """
         在给定的图像上绘制轮廓和顶点坐标。
         """
-        # 绘制轮廓
-        cv2.drawContours(img, [self.vertices], 0, (255, 0, 0), 2)
-
-        for _, vertex in enumerate(self.vertices):  # 绘制每个角点和坐标
-            cv2.circle(img, (vertex[0], vertex[1]), 5, (0, 0, 255), -1)
+        def draw_point_text(img, x, y, bgr = ( 0, 0, 255)): #绘制一个点，并显示其坐标。
+            cv2.circle(img, (x, y), 5, bgr, -1)
             cv2.putText(
                 img,
-                f"({vertex[0]}, {vertex[1]})",
-                (vertex[0] + 5, vertex[1] - 5),
+                f"({x}, {y})",
+                (x + 5, y - 5),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5, (0, 0, 255), 1, cv2.LINE_AA,
             )
-        
-        cv2.line(  # 绘制对角线
-            img,
-            (self.vertices[0][0], self.vertices[0][1]),
-            (self.vertices[2][0], self.vertices[2][1]),
-            (0, 255, 0), 1,
-        )
-        cv2.line(
-            img,
-            (self.vertices[1][0], self.vertices[1][1]),
-            (self.vertices[3][0], self.vertices[3][1]),
-            (0, 255, 0), 1,
-        )
-        
+
+        def draw_lines_points(img, vertices, bold=2):
+            # 绘制轮廓
+            cv2.drawContours(img, [vertices], 0, (255, 0, 0), bold)
+
+            for _, vertex in enumerate(vertices):  # 绘制每个角点和坐标
+                draw_point_text(img, vertex[0], vertex[1])
+            
+            cv2.line(  # 绘制对角线
+                img,
+                (vertices[0][0], vertices[0][1]),
+                (vertices[2][0], vertices[2][1]),
+                (0, 255, 0), 1,
+            )
+            cv2.line(
+                img,
+                (vertices[1][0], vertices[1][1]),
+                (vertices[3][0], vertices[3][1]),
+                (0, 255, 0), 1,
+            )
+            return img
+
+        img_drawed = draw_lines_points(self.img, self.vertices)
+        img_drawed = draw_lines_points(img_drawed, self.scale_vertices)
+
+        return img_drawed
+
 
 if __name__ == '__main__':
 
@@ -137,10 +254,12 @@ if __name__ == '__main__':
     print("开始")
     
     img = cv2.imread("img/rgb.jpg")
+    
 
-    detector = QuadDetector(img, 100000, 100, 0.5)
+    detector = QuadDetector(img, 100000, 100, 500/600)
     detector.detect()
-    detector.draw()
+    img_ = detector.draw()
 
     cv2.imshow("img", img)
+    cv2.imshow("img_", img_)
     cv2.waitKey(0)
