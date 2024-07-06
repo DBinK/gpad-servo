@@ -452,7 +452,7 @@ class PointDetector:
 
         if len(roi) > 0:
             self.img = self.roi_cut(img.copy(), roi)
-            cv2.imshow("roi", self.img)
+            # cv2.imshow("roi", self.img)
         else:
             self.img = img.copy()
 

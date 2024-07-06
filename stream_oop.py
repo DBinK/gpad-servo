@@ -4,96 +4,63 @@ from flask import Flask, render_template, Response
 import cv2
 import time
 import numpy as np
-from threading import Lock
+import detector
 
-# 假设cam模块中的函数已经实现，这里保持不变
-import cam
+quad_detector = detector.QuadDetector(20100, 100, 500/600)
+point_detector = detector.PointDetector()
 
 class ThreadedCamera(object):
-    def __init__(self, url):
-        self.frame = None
+    def __init__(self, url=0):
+        self.frame   = None
         self.capture = cv2.VideoCapture(url)
         self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 5)  # 设置最大缓冲区大小
 
-        self.FPS = 1 / 240
+        self.FPS    = 1 / 240  # 设置检测采样速率,单位为秒, 默认为240帧每秒
         self.FPS_MS = int(self.FPS * 1000)
 
         self.thread = threading.Thread(target=self.update, args=())
         self.thread.daemon = True
         self.thread.start()
 
-        # 使用Lock确保线程安全
-        self.frame_lock = Lock()
-
     def update(self):
         while True:
-            with self.frame_lock:
-                if self.capture.isOpened():
-                    (status, frame) = self.capture.read()
-                    if status:
-                        self.frame = frame.copy()
+            if self.capture.isOpened():
+                (status, frame) = self.capture.read()
+                if status:
+                    self.frame = frame.copy()
 
             time.sleep(self.FPS)
 
     def process_frame(self, frame):
-        # 为了减少全局变量的使用，将需要的变量作为参数传递
-        vertices, track_point, track_done, point_num, line_seg_num, detect_switch, r_tolerance, g_tolerance = cam.get_current_state()
 
-        processed_frame = frame.copy()
+        img = frame
+    
+        try:
+            # 获取四边形的 顶点坐标, 中心点坐标
+            vertices, scale_vertices, intersection = quad_detector.detect(img)
+            img_drawed  = quad_detector.draw()
 
-        processed_frame = cam.pre_cut(processed_frame)
+            # 获取 红点 和 绿点 的坐标
+            red_point, green_point = point_detector.detect(img, quad_detector.vertices)
+            img_drawed = point_detector.draw(img_drawed)        
 
-        contours = cam.preprocess_image(processed_frame)
+        except Exception as e:
+            print(f"未识别到矩形: {e}")  
+            img_drawed = img 
 
-        if contours is not None and detect_switch:
-            vertices = cam.find_max_perimeter_contour(contours, 999999999, 100*4) # 最大,最小允许周长(mm)
+        # 可以把控制代码放在这里, 此时控制频率和数据采样频率同步
+        # 
+        # 也可以另外再开一个线程, 只在需要时读取数据进行控制, 减小性能开销
 
-        if vertices is not None:
-            roi_frame = cam.roi_cut(processed_frame, vertices)
-            red_point, green_point = cam.find_point(roi_frame)  # 红点绿点改了这里
-
-            if red_point[0] != 0:
-                print(f"红色点: {red_point}")
-                processed_frame = cam.draw_point(processed_frame, red_point, color = 'red')
-            else:
-                red_point = [-1,-1]
-                
-            if green_point[0] != 0:
-                print(f"绿色点: {green_point}")
-                processed_frame = cam.draw_point(processed_frame, green_point, color = 'grn')
-            else:
-                green_point = [-1,-1]    
-
-            if out_or_in == 0:    # 外框配置
-                rate = (500/600)
-
-                line_seg_num = 3  # 线段分段段数 (>=1)
-                r_tolerance  = 8  # 到达目标点误差允许范围
-                g_tolerance  = 10  # 追踪误差阈值
-
-
-            elif out_or_in == 1:  # 内框配置
-                rate = (276/297)
-
-                line_seg_num = 1   # 线段分段段数 (>=1)
-                r_tolerance  = 18   # 到达目标点误差允许范围
-                g_tolerance  = 18  # 追踪误差阈值
-
-            processed_frame, new_vertices = cam.draw_contour_and_vertices(processed_frame, vertices, rate) # 外框与内框宽度之比 
-
-            processed_frame = cam.draw_line_points(processed_frame, new_vertices, line_seg_num)
-
-            # 此处省略了track_point相关逻辑，原理相同
-
-        return processed_frame
+        return img_drawed
 
     def show_frame(self):  # Windows 本地调试显示用
         cv2.namedWindow('Original MJPEG Stream', cv2.WINDOW_NORMAL)
         cv2.namedWindow('Processed Stream', cv2.WINDOW_NORMAL)
 
         while True:
-            with self.frame_lock:
-                frame = self.frame
+
+            frame = self.frame
 
             if frame is not None:
                 try:
@@ -111,10 +78,16 @@ class ThreadedCamera(object):
 
         cv2.destroyAllWindows()
 
+
+##############################################################################
+# Flask 服务器相关代码
+
 def generate_frames(camera):
+    """
+    生成帧的函数
+    """
     while True:
-        with camera.frame_lock:
-            frame = camera.frame
+        frame = camera.frame
 
         if frame is not None:
             try:
@@ -135,13 +108,20 @@ def index():
 
 @app.route('/video_feed')
 def video_feed():
-    camera = ThreadedCamera('http://192.168.50.4:8080/video/mjpeg')
+    url = 'http://192.168.1.207:8080/video/mjpeg'  # 更改为数字0使用第0个硬件摄像头, 也可以使用视频文件地址或者视频流网址
+    camera = ThreadedCamera(url)
     return Response(generate_frames(camera), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
+##############################################################################
+# 主函数
 if __name__ == '__main__':
-    if platform.system() == 'Linux':
+
+    if platform.system() == 'Linux': 
+        # 启动 Flask 服务器
         app.run(host='0.0.0.0', debug=True)
-    else:
-        camera = ThreadedCamera('http://192.168.100.4:8080/video/mjpeg')
+
+    else:   # 更改为数字0使用第0个硬件摄像头, 也可以使用视频文件地址或者视频流网址
+        url = 'http://192.168.1.207:8080/video/mjpeg'  
+        camera = ThreadedCamera(url)
         camera.show_frame()
