@@ -18,6 +18,7 @@ class QuadDetector:
         @param min_perimeter: 允许的最小周长
         @param scale: 缩放比例
         @param min_angle: 允许的最小角度
+        @param line_seg_num: 分段数量
         """
         self.img = None
 
@@ -128,12 +129,9 @@ class QuadDetector:
         
         def shrink_rectangle_new(img, scale):
             """
-            参数:
-            img: 一个数组，代表图像
-            scale: 缩小的比例因子，表示新矩形的大小是原矩形大小的scale倍。
-
-            返回值:
-            返回一个类型为numpy.int32的二维数组，包含四个点的坐标，这四个点分别代表缩小后矩形的四个顶点。
+            @param img: 输入图像, 为了获得图像高宽
+            @param scale: 缩放比例
+            @return: 中心缩放后的顶点坐标
             """
 
             height, width = img.shape[:2]
@@ -160,14 +158,9 @@ class QuadDetector:
 
         def inv_trans_vertices(small_vertices, inv_M):
             """
-            反变换顶点集合
-            
-            参数:
-            small_vertices: 一个二维数组，代表待变换的顶点集合，每个顶点为2D坐标。
-            inv_M: 一个4x4的矩阵，代表待应用的逆变换矩阵。
-            
-            返回值:
-            一个二维数组，表示应用逆变换后的顶点集合，顶点仍为2D坐标，但取整至最接近的整数。
+            @param small_vertices: 缩放后的顶点坐标
+            @param inv_M: 逆变换矩阵
+            @return: 逆变换后的顶点坐标
             """
             
             vertices_array = np.array(small_vertices, dtype=np.float32)
@@ -181,7 +174,12 @@ class QuadDetector:
             return inv_trans_vertices_int
         
         def draw_warped_image(img, M, inv_M):    # 用于检查变换效果
-
+            """
+            @param img: 输入图像
+            @param M: 透视变换矩阵
+            @param inv_M: 逆透视变换矩阵
+            @return: 透视变换后的图像
+            """
             height, width = img.shape[:2]  # 获取图像的高度和宽度
 
             # 应用透视变换到图像上
@@ -238,13 +236,9 @@ class QuadDetector:
     
     def calculate_intersection(self, vertices=None):
         """
-        计算四边形对角线的交点。
-
-        参数:
-        vertices: 一个包含四个顶点坐标的列表, 每个顶点是一个二元组(x, y)。
-
-        返回值:
-        如果存在交点, 返回交点的坐标(x, y)；如果不存在交点, 返回None。
+        @description: 计算四边形对角线的交点。
+        @param vertices: 输入的顶点坐标
+        @return: 返回交点坐标
         """
         if vertices is None:
             vertices = self.vertices
@@ -286,7 +280,7 @@ class QuadDetector:
         
     def detect(self,img):
         """
-        对预处理后的图像进行轮廓检测，并返回检测到的轮廓信息。
+        @description: 检测函数入口
         """
         self.img = img.copy()
 
@@ -300,11 +294,11 @@ class QuadDetector:
         return vertices, scale_vertices, intersection
     
     def draw(self, img=None):
+        """
+        @description: 绘制检测结果
+        """
         if img is None:
             img = self.img.copy()
-        """
-        在给定的图像上绘制轮廓和顶点坐标。
-        """
         def draw_point_text(img, x, y, bgr = ( 0, 0, 255)): #绘制一个点，并显示其坐标。
             cv2.circle(img, (x, y), 5, bgr, -1)
             cv2.putText(
@@ -354,26 +348,37 @@ class QuadDetector:
 
 
 class PointDetector:
-    def __init__(self, vertices=None):
+    def __init__(self, roi_vertices=None):
+        """
+        @param roi_vertices: ROI 区域的四个顶点坐标
+        """
         self.img = None
-        self.vertices = vertices
+        self.roi_vertices = roi_vertices
 
         self.red_point   = None
         self.green_point = None
 
-    def roi_cut(self, img, vertices):
+    def roi_cut(self, img, roi_vertices):
         """
-        裁剪图像以获取 ROI 区域。
+        @description: ROI 区域裁剪
+        @param img: 输入图像
+        @param roi_vertices: ROI 区域的四个顶点坐标
+        @return: 裁剪后的图像
         """
-        vertices = np.array(vertices, dtype=np.int32)
+        roi_vertices = np.array(roi_vertices, dtype=np.int32)
         mask = np.zeros_like(img)
-        cv2.fillPoly(mask, [vertices], (255, 255, 255))
+        cv2.fillPoly(mask, [roi_vertices], (255, 255, 255))
         masked_image = cv2.bitwise_and(img, mask)
 
         return masked_image
 
     @staticmethod
     def find_point(image):
+        """
+        @description: 寻找红点绿点的坐标
+        @param image: 输入图像
+        @return: 红点坐标, 绿点坐标
+        """
         hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
         def find_max_contours(mask):
             contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -394,6 +399,7 @@ class PointDetector:
                 return [0,0,0,0,0,0]
             
         def find_red_point(hsv):
+            # 红色范围
             lower = np.array([0, 100, 100])
             upper = np.array([10, 255, 255])
             mask1 = cv2.inRange(hsv, lower, upper)
@@ -414,12 +420,14 @@ class PointDetector:
             return find_max_contours(mask)
         
         def find_yellow_point(hsv):
+            # 黄色范围
             lower = np.array([26, 43, 46])
             upper = np.array([34, 255, 255])
             mask = cv2.inRange(hsv, lower, upper)
             return find_max_contours(mask)
         
         def find_white_point(hsv):
+            # 白色范围
             lower = np.array([0, 0, 200])
             upper = np.array([180, 30, 255])
             mask = cv2.inRange(hsv, lower, upper)
@@ -428,6 +436,7 @@ class PointDetector:
         red_point = find_red_point(hsv)
         green_point = find_green_point(hsv)
 
+        # 特殊情况处理
         if red_point[0] == 0 and green_point[0] == 0:
             yellow_point = find_yellow_point(hsv)
             red_point    = yellow_point
@@ -461,6 +470,9 @@ class PointDetector:
         return self.red_point, self.green_point
     
     def draw(self, img=None):
+        """
+        @param img: 待绘制图像, 为空时使用内部图像
+        """
         if img is None:
             img = self.img.copy()
         def draw_point(img, point, bgr = ( 0, 255, 255) , color = ' '):
@@ -481,7 +493,7 @@ class PointDetector:
 
 if __name__ == '__main__':
 
-    print("开始")
+    print("开始测试")
     
     img = cv2.imread("img/rgb.jpg")
     
@@ -493,6 +505,6 @@ if __name__ == '__main__':
     red_point, green_point = point_detector.detect(img,vertices)
     img_ = point_detector.draw(img_)
 
-    cv2.imshow("img", img)
-    cv2.imshow("img_", img_)
+    cv2.imshow("img_src", img)
+    cv2.imshow("img_detected", img_)
     cv2.waitKey(0)
